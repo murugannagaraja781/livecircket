@@ -1,6 +1,7 @@
 services:
   - type: web
     name: cricket-live-backend
+    runtime: node
     region: oregon
     buildCommand: yarn install && yarn build
     startCommand: node server.js
