@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import { Trophy, Activity, Calendar, Trophy as TrophyIcon } from 'lucide-react';
 
-const SOCKET_URL = 'http://localhost:4000'; // Change to Render URL after deployment
+const SOCKET_URL = 'https://livecircket.onrender.com'; // Point to Render backend
 
 function App() {
   const [matches, setMatches] = useState([]);
