@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "918317979398",
+    "project_id": "creator-3b3f3",
+    "storage_bucket": "creator-3b3f3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:918317979398:android:d90a823fb14e2a51057087",
+        "android_client_info": {
+          "package_name": "com.astrocircket"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "918317979398-p2erua31voh342pgdo4m1uqbgslh83mh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCt4LRmeADP94tTS7b8UgM7WFy6wTzLn9Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "918317979398-p2erua31voh342pgdo4m1uqbgslh83mh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
