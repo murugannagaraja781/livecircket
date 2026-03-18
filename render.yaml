@@ -3,9 +3,9 @@ services:
     name: cricket-live-backend
     runtime: node
     region: oregon
+    rootDir: backend
     buildCommand: yarn install && yarn build
-    startCommand: node server.js
-    directory: backend
+    startCommand: yarn start
     envVars:
       - key: NODE_ENV
         value: production
