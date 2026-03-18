@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: cricket-live-backend
+    region: oregon
+    buildCommand: yarn install && yarn build
+    startCommand: node server.js
+    directory: backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: STATPAL_KEY
+        sync: false
