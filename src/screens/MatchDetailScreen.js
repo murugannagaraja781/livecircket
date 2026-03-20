@@ -3,7 +3,10 @@ import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } fr
 import io from 'socket.io-client';
 import { CONFIG } from '../api/config';
 import { COLORS } from '../theme/colors';
-import { ArrowLeft, Share2, Info, ListChecks, PlayCircle } from 'lucide-react-native';
+import { ArrowLeft, Share2, Info, ListChecks, PlayCircle, BarChart2, DollarSign } from 'lucide-react-native';
+import { LineChart, BarChart } from 'react-native-chart-kit';
+import { Dimensions } from 'react-native';
+const screenWidth = Dimensions.get("window").width;
 import axios from 'axios';
 
 const socket = io(CONFIG.SOCKET_SERVER);
@@ -93,6 +96,14 @@ export const MatchDetailScreen = ({ route, navigation }) => {
           <ListChecks size={18} color={activeTab === 'scorecard' ? COLORS.accent : COLORS.textMuted} />
           <Text style={[styles.tabText, activeTab === 'scorecard' && styles.activeTabText]}>SCORECARD</Text>
         </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === 'graphs' && styles.activeTab]} onPress={() => setActiveTab('graphs')}>
+          <BarChart2 size={18} color={activeTab === 'graphs' ? COLORS.accent : COLORS.textMuted} />
+          <Text style={[styles.tabText, activeTab === 'graphs' && styles.activeTabText]}>GRAPHS</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={[styles.tab, activeTab === 'odds' && styles.activeTab]} onPress={() => setActiveTab('odds')}>
+          <DollarSign size={18} color={activeTab === 'odds' ? COLORS.accent : COLORS.textMuted} />
+          <Text style={[styles.tabText, activeTab === 'odds' && styles.activeTabText]}>ODDS</Text>
+        </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content}>
@@ -179,6 +190,69 @@ export const MatchDetailScreen = ({ route, navigation }) => {
                   ))}
               </View>
           )}
+
+          {activeTab === 'graphs' && (
+              <View style={styles.liveContainer}>
+                  <Text style={styles.infoTitle}>Manhattan (Runs per Over)</Text>
+                  <BarChart
+                    data={{
+                      labels: (match.scoreHistory || []).map(h => h.over),
+                      datasets: [{ data: (match.scoreHistory || []).map(h => parseFloat(h.runs || 0)) }]
+                    }}
+                    width={screenWidth - 30}
+                    height={220}
+                    yAxisLabel=""
+                    chartConfig={chartConfig}
+                    verticalLabelRotation={30}
+                    style={styles.chart}
+                  />
+                  
+                  <Text style={[styles.infoTitle, {marginTop: 30}]}>Worm Chart</Text>
+                  <LineChart
+                    data={{
+                      labels: (match.scoreHistory || []).map(h => h.over),
+                      datasets: [{ data: (match.scoreHistory || []).map(h => parseFloat(h.runs || 0)) }]
+                    }}
+                    width={screenWidth - 30}
+                    height={220}
+                    chartConfig={chartConfig}
+                    bezier
+                    style={styles.chart}
+                  />
+                  {(match.scoreHistory || []).length === 0 && (
+                      <Text style={styles.commentaryText}>Gathering data points... Graphs will appear during live play.</Text>
+                  )}
+              </View>
+          )}
+
+          {activeTab === 'odds' && (
+              <View style={styles.liveContainer}>
+                  {match.odds ? (
+                      (match.odds.type || []).map((type, i) => (
+                          <View key={i} style={styles.infoCard}>
+                              <Text style={styles.infoTitle}>{type.value}</Text>
+                              {(Array.isArray(type.bookmaker) ? type.bookmaker : [type.bookmaker]).slice(0, 3).map((bk, j) => (
+                                  <View key={j} style={styles.oddsRow}>
+                                      <Text style={styles.bookmakerName}>{bk.name}</Text>
+                                      <View style={{flexDirection: 'row'}}>
+                                          {(bk.odd || []).map((o, k) => (
+                                              <View key={k} style={styles.oddBox}>
+                                                  <Text style={styles.oddType}>{o.name[0]}</Text>
+                                                  <Text style={styles.oddValue}>{o.value}</Text>
+                                              </View>
+                                          ))}
+                                      </View>
+                                  </View>
+                              ))}
+                          </View>
+                      ))
+                  ) : (
+                      <View style={styles.infoCard}>
+                          <Text style={styles.commentaryText}>No market odds available for this match.</Text>
+                      </View>
+                  )}
+              </View>
+          )}
       </ScrollView>
 
     </SafeAreaView>
@@ -201,7 +275,7 @@ const styles = StyleSheet.create({
   statusBanner: { marginTop: 20, backgroundColor: 'rgba(245, 158, 11, 0.1)', paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
   statusMainText: { color: COLORS.accent, fontSize: 13, fontWeight: '700' },
   tabBar: { flexDirection: 'row', backgroundColor: COLORS.secondary, borderBottomWidth: 1, borderBottomColor: COLORS.border },
-  tab: { flex: 1, alignItems: 'center', paddingVertical: 15, flexDirection: 'row', justifyContent: 'center' },
+  tab: { flex: 1, alignItems: 'center', paddingVertical: 15, flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 5 },
   activeTab: { borderBottomWidth: 2, borderBottomColor: COLORS.accent },
   tabText: { color: COLORS.textMuted, fontWeight: '700', fontSize: 12, marginLeft: 8 },
   activeTabText: { color: COLORS.accent },
@@ -227,5 +301,21 @@ const styles = StyleSheet.create({
   scoreRecord: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
   playerTextScore: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
   outDesc: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
-  playerRuns: { color: COLORS.accent, fontSize: 14, fontWeight: '800' }
+  playerRuns: { color: COLORS.accent, fontSize: 14, fontWeight: '800' },
+  chart: { marginVertical: 8, borderRadius: 16 },
+  oddsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)', paddingBottom: 10 },
+  bookmakerName: { color: COLORS.textMuted, fontSize: 12, fontWeight: '700' },
+  oddBox: { backgroundColor: 'rgba(245, 158, 11, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8, alignItems: 'center', minWidth: 40 },
+  oddType: { color: COLORS.textMuted, fontSize: 8, fontWeight: '900' },
+  oddValue: { color: COLORS.accent, fontSize: 12, fontWeight: '900' }
 });
+
+const chartConfig = {
+    backgroundGradientFrom: COLORS.primary,
+    backgroundGradientTo: COLORS.primary,
+    color: (opacity = 1) => `rgba(245, 158, 11, ${opacity})`,
+    labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    strokeWidth: 2, 
+    barPercentage: 0.5,
+    useShadowColorFromDataset: false 
+};

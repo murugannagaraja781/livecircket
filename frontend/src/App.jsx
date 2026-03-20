@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
 import axios from 'axios';
-import { Trophy, Activity, Calendar, Trophy as TrophyIcon } from 'lucide-react';
+import { Trophy, Activity, Calendar, Trophy as TrophyIcon, BarChart as ChartIcon, LineChart as LineIcon } from 'lucide-react';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const SOCKET_URL = 'http://localhost:4000';
 
@@ -168,6 +169,64 @@ function App() {
                   <p>{selectedMatch.last_wicket}</p>
                </div>
              )}
+          </div>
+
+          {/* Market Odds */}
+          {selectedMatch.odds && (
+            <div className="stats-section glass" style={{ marginTop: '1rem' }}>
+              <h3>Market Odds</h3>
+              <div className="odds-grid">
+                {(selectedMatch.odds.type || []).map((type, i) => (
+                  <div key={i} className="market-group">
+                    <h4 style={{ color: 'var(--accent)', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{type.value}</h4>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem' }}>
+                      {(Array.isArray(type.bookmaker) ? type.bookmaker : [type.bookmaker]).slice(0, 3).map((bk, j) => (
+                        <div key={j} className="glass" style={{ padding: '0.75rem', minWidth: '150px' }}>
+                          <p style={{ fontSize: '0.6rem', color: '#94a3b8', margin: 0 }}>{bk.name}</p>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.3rem' }}>
+                            {(bk.odd || []).map((o, k) => (
+                              <div key={k} style={{ textAlign: 'center' }}>
+                                <span style={{ fontSize: '0.5rem', display: 'block' }}>{o.name === 'Home' ? 'H' : o.name === 'Away' ? 'A' : 'D'}</span>
+                                <span style={{ fontWeight: 800, color: 'var(--primary)', fontSize: '0.8rem' }}>{o.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Manhattan & Worm Graphs */}
+          <div className="grid-2-col" style={{ marginTop: '1rem' }}>
+            <div className="stats-section glass" style={{ height: '300px' }}>
+              <h3>Manhattan (Runs per Over)</h3>
+              <ResponsiveContainer width="100%" height="90%">
+                <BarChart data={selectedMatch.scoreHistory || []}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="over" stroke="rgba(255,255,255,0.5)" fontSize={10} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" fontSize={10} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                  <Bar dataKey="runs" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+            
+            <div className="stats-section glass" style={{ height: '300px' }}>
+              <h3>Worm (Cumulative Score)</h3>
+              <ResponsiveContainer width="100%" height="90%">
+                <LineChart data={selectedMatch.scoreHistory || []}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis dataKey="over" stroke="rgba(255,255,255,0.5)" fontSize={10} />
+                  <YAxis stroke="rgba(255,255,255,0.5)" fontSize={10} />
+                  <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+                  <Line type="monotone" dataKey="runs" stroke="var(--secondary)" strokeWidth={3} dot={{ r: 4, fill: 'var(--secondary)' }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
         </div>
       ) : loading ? (

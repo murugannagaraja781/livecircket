@@ -8,6 +8,14 @@ function Write-Err($msg){ Write-Host "[ERROR] $msg" -ForegroundColor Red }
 function Write-Ok($msg){ Write-Host "[OK] $msg" -ForegroundColor Green }
 
 if (Test-Path $androidGradle) {
+    # Force JDK 17 for React Native 0.76+ compatibility
+    $localJdk = "c:\livecircket\jdk17\jdk-17.0.18+8"
+    if (Test-Path $localJdk) {
+        $env:JAVA_HOME = $localJdk
+        $env:Path = "$localJdk\bin;" + $env:Path
+        Write-Ok "Setting JAVA_HOME to $localJdk"
+    }
+
     Write-Ok "Found Android gradlew.bat. Running assembleRelease..."
     Push-Location android
     try {

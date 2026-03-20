@@ -21,6 +21,7 @@ const io = new Server(server, { cors: { origin: '*' } });
 
 // 🚀 Local Memory Database (Replaces Supabase Postgres & RabbitMQ)
 let matchHistory = {}; 
+let matchOdds = {};
 
 async function fetchAndProduce() {
   try {
@@ -73,8 +74,8 @@ async function fetchAndProduce() {
           matchHistory[match.id] = payload;
           matchHistory[match.id].scoreHistory = [];
         } else {
-          // Update basic info
-          const oldHistory = matchHistory[match.id].scoreHistory || [];
+          // Attach odds if available
+          payload.odds = matchOdds[match.id] || null;
           matchHistory[match.id] = { ...payload, scoreHistory: oldHistory };
         }
 
@@ -149,6 +150,28 @@ async function fetchUpcoming() {
   }
 }
 
+async function fetchOdds() {
+  try {
+    const response = await axios.get(`https://statpal.io/api/v1/cricket/odds?access_key=${STATPAL_KEY}`);
+    const data = response.data;
+    if (!data || !data.odds || !data.odds.category) return;
+
+    const categories = Array.isArray(data.odds.category) ? data.odds.category : [data.odds.category];
+    categories.forEach(cat => {
+      const matches = cat.matches?.match || [];
+      const matchArray = Array.isArray(matches) ? matches : [matches];
+      matchArray.forEach(m => {
+        if (m.id) {
+          matchOdds[m.id] = m.odds; // Store odds by match ID
+        }
+      });
+    });
+    logger.info('Market odds updated');
+  } catch (err) {
+    logger.error('Fetch Odds Error', { message: err.message });
+  }
+}
+
 io.on('connection', socket => {
   socket.on('subscribe', ({ matchId }) => socket.join(`match:${matchId}`));
   socket.on('unsubscribe', ({ matchId }) => socket.leave(`match:${matchId}`));
@@ -175,9 +198,11 @@ const listenPort = PORT || process.env.PORT || 4000;
 server.listen(listenPort, () => {
   logger.info('🚀 ZERO-DEPENDENCY Server listening', { port: listenPort });
   
-  // Start fetching scores immediately and every 10 seconds for high performance
+  // Start fetching scores immediately
   fetchAndProduce();
   fetchUpcoming();
+  fetchOdds();
   setInterval(fetchAndProduce, 10000); 
-  setInterval(fetchUpcoming, 300000); // Fetch upcoming less frequently (every 5 mins)
+  setInterval(fetchUpcoming, 300000); 
+  setInterval(fetchOdds, 60000); // Fetch odds every minute
 });
