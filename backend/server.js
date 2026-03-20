@@ -26,11 +26,27 @@ async function fetchAndProduce() {
     const data = response.data;
     if (!data || !data.scores || !data.scores.category) return;
 
-    data.scores.category.forEach(cat => {
+    const categories = Array.isArray(data.scores.category) ? data.scores.category : [data.scores.category];
+
+    categories.forEach(cat => {
       const matches = Array.isArray(cat.match) ? cat.match : [cat.match];
       matches.forEach(match => {
         if (!match || !match.id) return;
         
+        const statusLower = match.status?.toLowerCase() || '';
+        const isLive = statusLower.includes('live') || 
+                       statusLower.includes('in progress') ||
+                       statusLower.includes('lunch') ||
+                       statusLower.includes('tea') ||
+                       statusLower.includes('stumps');
+
+        const isFinished = statusLower.includes('won') || 
+                          statusLower.includes('tied') || 
+                          statusLower.includes('drawn') ||
+                          statusLower.includes('abandoned') ||
+                          statusLower.includes('no result') ||
+                          statusLower.includes('finished');
+
         const payload = {
           id: match.id,
           matchId: match.id,
@@ -44,7 +60,8 @@ async function fetchAndProduce() {
             away: match.away?.totalscore || 'Yet to bat' 
           },
           status: match.status || 'Scheduled',
-          live: match.status?.toLowerCase().includes('live') || match.status?.toLowerCase().includes('in progress'),
+          live: isLive,
+          finished: isFinished,
           created_at: new Date().toISOString()
         };
 
@@ -55,8 +72,48 @@ async function fetchAndProduce() {
         io.emit('score_update_global', payload);
       });
     });
+    logger.info('Live scores updated', { count: Object.values(matchHistory).filter(m => m.live).length });
   } catch (err) {
-    logger.error('Fetch Error', { message: err.message });
+    logger.error('Fetch Live Scores Error', { message: err.message });
+  }
+}
+
+async function fetchUpcoming() {
+  try {
+    const response = await axios.get(`https://statpal.io/api/v1/cricket/upcoming-schedule?access_key=${STATPAL_KEY}`);
+    const data = response.data;
+    if (!data || !data.fixtures || !data.fixtures.category) return;
+
+    const categories = Array.isArray(data.fixtures.category) ? data.fixtures.category : [data.fixtures.category];
+
+    categories.forEach(cat => {
+      const matches = Array.isArray(cat.match) ? cat.match : [cat.match];
+      matches.forEach(match => {
+        if (!match || !match.id) return;
+
+        // Only add if not already in history (to avoid overwriting live scores with scheduled info)
+        if (!matchHistory[match.id]) {
+          const payload = {
+            id: match.id,
+            matchId: match.id,
+            series: cat.name,
+            teams: { 
+              home: match.home?.name || 'Home', 
+              away: match.away?.name || 'Away' 
+            },
+            score: { home: 'Upcoming', away: 'Upcoming' },
+            status: `${match.date} at ${match.time}`,
+            live: false,
+            upcoming: true,
+            created_at: new Date().toISOString()
+          };
+          matchHistory[match.id] = payload;
+        }
+      });
+    });
+    logger.info('Upcoming matches updated', { count: Object.values(matchHistory).filter(m => m.upcoming).length });
+  } catch (err) {
+    logger.error('Fetch Upcoming Error', { message: err.message });
   }
 }
 
@@ -86,7 +143,9 @@ const listenPort = PORT || process.env.PORT || 4000;
 server.listen(listenPort, () => {
   logger.info('🚀 ZERO-DEPENDENCY Server listening', { port: listenPort });
   
-  // Start fetching live scores immediately and every 30 seconds
+  // Start fetching scores immediately and every 30 seconds
   fetchAndProduce();
+  fetchUpcoming();
   setInterval(fetchAndProduce, 30000);
+  setInterval(fetchUpcoming, 300000); // Fetch upcoming less frequently (every 5 mins)
 });

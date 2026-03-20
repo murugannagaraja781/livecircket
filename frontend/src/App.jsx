@@ -3,11 +3,12 @@ import io from 'socket.io-client';
 import axios from 'axios';
 import { Trophy, Activity, Calendar, Trophy as TrophyIcon } from 'lucide-react';
 
-const SOCKET_URL = 'https://livecircket.onrender.com'; // Point to Render backend
+const SOCKET_URL = 'http://localhost:4000';
 
 function App() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('live');
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -39,6 +40,27 @@ function App() {
     return () => socket.disconnect();
   }, []);
 
+  const filteredMatches = matches.filter(m => {
+    if (activeTab === 'live') return m.live;
+    if (activeTab === 'finished') return m.finished;
+    if (activeTab === 'upcoming') return m.upcoming;
+    return true;
+  });
+
+  const getBadgeClass = (m) => {
+    if (m.live) return 'badge-live';
+    if (m.finished) return 'badge-finished';
+    if (m.upcoming) return 'badge-upcoming';
+    return '';
+  };
+
+  const getStatusText = (m) => {
+    if (m.live) return 'LIVE';
+    if (m.finished) return 'FINISHED';
+    if (m.upcoming) return 'UPCOMING';
+    return '';
+  };
+
   return (
     <div className="container">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -52,37 +74,55 @@ function App() {
         </div>
       </header>
 
+      <div className="tabs">
+        <button className={`tab ${activeTab === 'live' ? 'active' : ''}`} onClick={() => setActiveTab('live')}>
+          <Activity size={16} /> LIVE
+        </button>
+        <button className={`tab ${activeTab === 'upcoming' ? 'active' : ''}`} onClick={() => setActiveTab('upcoming')}>
+          <Calendar size={16} /> UPCOMING
+        </button>
+        <button className={`tab ${activeTab === 'finished' ? 'active' : ''}`} onClick={() => setActiveTab('finished')}>
+          <TrophyIcon size={16} /> FINISHED
+        </button>
+      </div>
+
       {loading ? (
         <div style={{ textAlign: 'center', marginTop: '5rem' }}>
           <div className="badge-live badge">Loading Scores...</div>
         </div>
       ) : (
         <div className="card-grid">
-          {matches.map((match) => (
-            <div key={match.id} className="glass match-card">
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8' }}>
-                  {match.series}
-                </span>
-                <span className={`badge ${match.live ? 'badge-live' : 'badge-finished'}`}>
-                  {match.live ? 'LIVE' : 'FINISHED'}
-                </span>
-              </div>
-
-              <div className="team-row">
-                <span className="team-name">{match.teams.home}</span>
-                <span className="score">{match.score.home}</span>
-              </div>
-              <div className="team-row">
-                <span className="team-name">{match.teams.away}</span>
-                <span className="score">{match.score.away}</span>
-              </div>
-
-              <div className="status">
-                {match.status}
-              </div>
+          {filteredMatches.length === 0 ? (
+            <div className="glass" style={{ padding: '3rem', gridColumn: '1 / -1', textAlign: 'center', color: '#94a3b8' }}>
+              No matches found in this category.
             </div>
-          ))}
+          ) : (
+            filteredMatches.map((match) => (
+              <div key={match.id} className="glass match-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8' }}>
+                    {match.series}
+                  </span>
+                  <span className={`badge ${getBadgeClass(match)}`}>
+                    {getStatusText(match)}
+                  </span>
+                </div>
+
+                <div className="team-row">
+                  <span className="team-name">{match.teams.home}</span>
+                  <span className="score">{match.score.home}</span>
+                </div>
+                <div className="team-row">
+                  <span className="team-name">{match.teams.away}</span>
+                  <span className="score">{match.score.away}</span>
+                </div>
+
+                <div className="status">
+                  {match.status}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       )}
     </div>

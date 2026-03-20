@@ -19,7 +19,7 @@ ios/Pods/
 ios/DerivedData/
 *.xcworkspace
 *.xcscheme
-
+jdk17/
 # Expo
 .expo/
 web-build/

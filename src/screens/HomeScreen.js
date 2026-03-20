@@ -140,9 +140,10 @@ export const HomeScreen = ({ navigation }) => {
   }, []);
 
   const filteredMatches = matches.filter(m => {
-    if (activeTab === 'live') return m.live === true;
-    if (activeTab === 'finished') return m.live === false;
-    return true; // upcoming logic can be more complex based on date
+    if (activeTab === 'live') return m.live;
+    if (activeTab === 'upcoming') return m.upcoming;
+    if (activeTab === 'finished') return m.finished;
+    return true;
   });
 
   const onRefresh = async () => {

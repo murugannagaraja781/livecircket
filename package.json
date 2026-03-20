@@ -6,7 +6,7 @@
     "start": "react-native start",
     "android": "react-native run-android",
     "ios": "react-native run-ios",
-    "build:android": "powershell -ExecutionPolicy Bypass -File .\build_apk.ps1",
+    "build:android": "powershell -ExecutionPolicy Bypass -File ./build_apk.ps1",
     "lint": "echo \"Add linting\""
   },
   "dependencies": {

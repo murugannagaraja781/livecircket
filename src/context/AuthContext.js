@@ -11,7 +11,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Configure Google Sign In
     GoogleSignin.configure({
-      webClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com',
+      webClientId: '918317979398-p2erua31voh342pgdo4m1uqbgslh83mh.apps.googleusercontent.com',
       offlineAccess: true,
     });
 

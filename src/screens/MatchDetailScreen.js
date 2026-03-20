@@ -47,24 +47,37 @@ export const MatchDetailScreen = ({ route, navigation }) => {
       </View>
 
       <View style={styles.scoreBoard}>
-         <View style={styles.scoreRow}>
-             <View style={styles.teamInfo}>
-                 <Text style={styles.teamNameMain}>{match.teams.home}</Text>
-                 <Text style={styles.scoreMain}>{match.score.home || '0/0'}</Text>
-                 <Text style={styles.oversMain}>({match.score.overs_home || '0.0'})</Text>
-             </View>
-             <View style={styles.vsContainer}>
-                 <Text style={styles.vsText}>VS</Text>
-             </View>
-             <View style={styles.teamInfo}>
-                 <Text style={styles.teamNameMain}>{match.teams.away}</Text>
-                 <Text style={styles.scoreMain}>{match.score.away || '0/0'}</Text>
-                 <Text style={styles.oversMain}>({match.score.overs_away || '0.0'})</Text>
-             </View>
-         </View>
-         <View style={styles.statusBanner}>
-            <Text style={styles.statusMainText}>{match.status}</Text>
-         </View>
+        {match.upcoming ? (
+          <View style={styles.upcomingContainer}>
+            <View style={styles.teamRowLarge}>
+               <Text style={styles.teamNameLarge}>{match.teams.home}</Text>
+               <Text style={styles.vsTextLarge}>VS</Text>
+               <Text style={styles.teamNameLarge}>{match.teams.away}</Text>
+            </View>
+            <Text style={styles.matchTimeText}>Match starts at {match.status}</Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.scoreRow}>
+                <View style={styles.teamInfo}>
+                    <Text style={styles.teamNameMain}>{match.teams.home}</Text>
+                    <Text style={styles.scoreMain}>{match.score.home || '0/0'}</Text>
+                    <Text style={styles.oversMain}>({match.score.overs_home || '0.0'})</Text>
+                </View>
+                <View style={styles.vsContainer}>
+                    <Text style={styles.vsText}>VS</Text>
+                </View>
+                <View style={styles.teamInfo}>
+                    <Text style={styles.teamNameMain}>{match.teams.away}</Text>
+                    <Text style={styles.scoreMain}>{match.score.away || '0/0'}</Text>
+                    <Text style={styles.oversMain}>({match.score.overs_away || '0.0'})</Text>
+                </View>
+            </View>
+            <View style={styles.statusBanner}>
+               <Text style={styles.statusMainText}>{match.status}</Text>
+            </View>
+          </>
+        )}
       </View>
 
       <View style={styles.tabBar}>
@@ -135,5 +148,10 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
   infoLabel: { color: COLORS.textMuted, fontSize: 13 },
   infoValue: { color: COLORS.white, fontSize: 13, fontWeight: '600', maxWidth: '60%' },
-  commentaryText: { color: COLORS.textMuted, fontSize: 14, fontStyle: 'italic', textAlign: 'center', marginTop: 20 }
+  commentaryText: { color: COLORS.textMuted, fontSize: 14, fontStyle: 'italic', textAlign: 'center', marginTop: 20 },
+  upcomingContainer: { padding: 10, alignItems: 'center' },
+  teamRowLarge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
+  teamNameLarge: { color: COLORS.white, fontSize: 22, fontWeight: '900' },
+  vsTextLarge: { color: COLORS.accent, fontSize: 16, fontWeight: '900', marginHorizontal: 20 },
+  matchTimeText: { color: COLORS.textMuted, fontSize: 16, fontWeight: '600', fontStyle: 'italic' }
 });

@@ -83,6 +83,44 @@ h1 {
 
 .badge-live { background-color: var(--danger); animation: pulse 2s infinite; }
 .badge-finished { background-color: var(--success); }
+.badge-upcoming { background-color: var(--secondary); }
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 0.4rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 16px;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tab {
+  padding: 0.6rem 1.25rem;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tab.active {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 242, 254, 0.3);
+}
+
+.tab:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
 
 @keyframes pulse {
   0% { opacity: 1; }
