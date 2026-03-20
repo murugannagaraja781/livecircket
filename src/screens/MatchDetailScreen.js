@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import axios from 'axios';
 import io from 'socket.io-client';
-import { CONFIG } from '../api/config';
-import { COLORS } from '../theme/colors';
+import { Dimensions, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { ArrowLeft, Share2, Info, ListChecks, PlayCircle, BarChart2, DollarSign } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { Dimensions } from 'react-native';
-const screenWidth = Dimensions.get("window").width;
-import axios from 'axios';
+import { CONFIG } from '../api/config';
+import { COLORS } from '../theme/colors';
 
+const screenWidth = Dimensions.get("window").width;
 const socket = io(CONFIG.SOCKET_SERVER);
 
 export const MatchDetailScreen = ({ route, navigation }) => {
