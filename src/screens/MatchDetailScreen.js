@@ -1,42 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import io from 'socket.io-client';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchMatchDetail } from '../redux/matchesSlice';
 import { Dimensions, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { ArrowLeft, Share2, Info, ListChecks, PlayCircle, BarChart2, DollarSign } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
-import { CONFIG } from '../api/config';
 import { COLORS } from '../theme/colors';
 
 const screenWidth = Dimensions.get("window").width;
-const socket = io(CONFIG.SOCKET_SERVER);
 
 export const MatchDetailScreen = ({ route, navigation }) => {
   const { matchId } = route.params;
-  const [match, setMatch] = useState(null);
+  const dispatch = useDispatch();
+  const match = useSelector(state => state.matches.details[matchId] || state.matches.live.find(m => m.id === matchId) || state.matches.upcoming.find(m => m.id === matchId) || state.matches.finished.find(m => m.id === matchId));
   const [activeTab, setActiveTab] = useState('info');
 
-  const fetchDetail = async () => {
-    try {
-      const response = await axios.get(`${CONFIG.SOCKET_SERVER}/history/${matchId}`);
-      if (response.data && response.data.payload) {
-        setMatch(response.data.payload);
-      }
-    } catch (e) {
-      console.error('Fetch Detail Error', e);
-    }
-  };
-
   useEffect(() => {
-    fetchDetail();
-    socket.emit('subscribe', { matchId });
-    socket.on('score_update', (data) => {
-      setMatch(prev => ({ ...prev, ...data }));
-    });
-    return () => {
-      socket.emit('unsubscribe', { matchId });
-      socket.off('score_update');
-    };
-  }, [matchId]);
+    dispatch(fetchMatchDetail(matchId));
+  }, [dispatch, matchId]);
 
   if (!match) return <View style={styles.loading}><ActivityIndicator size="large" color={COLORS.accent} /><Text style={{color: COLORS.white, marginTop: 10}}>Loading Match Details...</Text></View>;
 

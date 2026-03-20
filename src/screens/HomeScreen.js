@@ -1,13 +1,11 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, RefreshControl, Alert } from 'react-native';
-import io from 'socket.io-client';
+import { useSelector, useDispatch } from 'react-redux';
+import { fetchMatches } from '../redux/matchesSlice';
 import { CONFIG } from '../api/config';
 import { COLORS } from '../theme/colors';
 import { Trophy, Calendar, CheckCircle2, ChevronRight, LogOut } from 'lucide-react-native';
-import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-
-const socket = io(CONFIG.SOCKET_SERVER);
 
 const MatchCard = ({ match, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
@@ -38,8 +36,9 @@ const MatchCard = ({ match, onPress }) => (
 
 export const HomeScreen = ({ navigation }) => {
   const { logout } = useContext(AuthContext);
+  const dispatch = useDispatch();
+  const { live, upcoming, finished, loading } = useSelector(state => state.matches);
   const [activeTab, setActiveTab] = useState('live');
-  const [matches, setMatches] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
 
   const handleLogout = () => {
@@ -53,104 +52,17 @@ export const HomeScreen = ({ navigation }) => {
     );
   };
 
-  const fetchMatches = async () => {
-    try {
-      const response = await axios.get(`${CONFIG.SOCKET_SERVER}/matches`, {
-        timeout: 10000,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-
-      let rows = [];
-      if (Array.isArray(response.data)) {
-        rows = response.data;
-      } else if (response.data && Array.isArray(response.data.matches)) {
-        rows = response.data.matches;
-      } else if (response.data && Array.isArray(response.data.data)) {
-        rows = response.data.data;
-      }
-
-      const formatted = rows.map(r => ({
-        ...r.payload,
-        id: r.id || r._id || String(Math.random()),
-        db_date: r.created_at || r.date,
-        live: r.live || r.status === 'live' || false,
-        teams: r.teams || { home: r.team1 || 'Team A', away: r.team2 || 'Team B' },
-        score: r.score || { home: r.score1 || '0/0', away: r.score2 || '0/0' }
-      }));
-      setMatches(formatted);
-    } catch (e) {
-      console.error('Fetch Matches Error', e.message);
-      // Set some sample data for testing if API fails
-      if (matches.length === 0) {
-        setMatches([
-          {
-            id: '1',
-            series: 'IPL 2024',
-            live: true,
-            teams: { home: 'CSK', away: 'MI' },
-            score: { home: '180/4', away: '145/3' },
-            status: 'MI needs 36 runs in 12 balls'
-          },
-          {
-            id: '2',
-            series: 'International',
-            live: false,
-            teams: { home: 'India', away: 'Australia' },
-            score: { home: '350/7', away: '280/10' },
-            status: 'India won by 70 runs'
-          }
-        ]);
-      }
-    }
-  };
-
   useEffect(() => {
-    fetchMatches();
-
-    // Socket connection with error handling
-    socket.on('connect', () => {
-      console.log('Socket connected');
-    });
-
-    socket.on('connect_error', (error) => {
-      console.log('Socket connection error:', error.message);
-    });
-
-    socket.on('score_update_global', (data) => {
-      setMatches(prev => {
-        const idx = prev.findIndex(m => m.id === data.matchId);
-        if (idx > -1) {
-          const updated = [...prev];
-          updated[idx] = { ...updated[idx], ...data };
-          return updated;
-        } else {
-          return [data, ...prev];
-        }
-      });
-    });
-
-    return () => {
-      socket.off('connect');
-      socket.off('connect_error');
-      socket.off('score_update_global');
-    };
-  }, []);
-
-  const filteredMatches = matches.filter(m => {
-    if (activeTab === 'live') return m.live;
-    if (activeTab === 'upcoming') return m.upcoming;
-    if (activeTab === 'finished') return m.finished;
-    return true;
-  });
+    dispatch(fetchMatches());
+  }, [dispatch]);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await fetchMatches();
+    await dispatch(fetchMatches());
     setRefreshing(false);
   };
+
+  const filteredMatches = activeTab === 'live' ? live : activeTab === 'upcoming' ? upcoming : finished;
 
   return (
     <SafeAreaView style={styles.container}>

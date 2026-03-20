@@ -1,4 +1,8 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
+import { Provider, useDispatch } from 'react-redux';
+import { store } from './src/redux/store';
+import { updateMatch } from './src/redux/matchesSlice';
+import io from 'socket.io-client';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
@@ -12,6 +16,17 @@ const Stack = createStackNavigator();
 
 const AppContent = () => {
   const { user, initializing } = useContext(AuthContext);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (user) {
+      const socket = io(CONFIG.SOCKET_SERVER);
+      socket.on('score_update', (data) => {
+        dispatch(updateMatch(data));
+      });
+      return () => socket.disconnect();
+    }
+  }, [user]);
 
   if (initializing) {
     return (
@@ -39,9 +54,11 @@ const AppContent = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <Provider store={store}>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </Provider>
   );
 }
 
