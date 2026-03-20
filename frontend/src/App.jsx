@@ -231,7 +231,8 @@ function App() {
         </div>
       ) : loading ? (
         <div style={{ textAlign: 'center', marginTop: '5rem' }}>
-          <div className="badge-live badge">Loading Scores...</div>
+          <div className="spinner"></div>
+          <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Loading Match Details...</p>
         </div>
       ) : (
         <div className="card-grid">

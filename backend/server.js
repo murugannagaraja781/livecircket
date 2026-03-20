@@ -131,8 +131,8 @@ async function fetchUpcoming() {
             matchId: match.id,
             series: cat.name,
             teams: { 
-              home: match.home?.name || 'Home', 
-              away: match.away?.name || 'Away' 
+              home: match.home?.name || match.home_name || 'Home Team', 
+              away: match.away?.name || match.away_name || 'Away Team' 
             },
             score: { home: 'Upcoming', away: 'Upcoming' },
             status: `${match.date} at ${match.time}`,

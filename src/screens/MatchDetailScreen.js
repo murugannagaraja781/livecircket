@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
-import { Dimensions, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import { Dimensions, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { ArrowLeft, Share2, Info, ListChecks, PlayCircle, BarChart2, DollarSign } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { CONFIG } from '../api/config';
@@ -38,7 +38,7 @@ export const MatchDetailScreen = ({ route, navigation }) => {
     };
   }, [matchId]);
 
-  if (!match) return <View style={styles.loading}><Text style={{color: COLORS.white}}>Loading...</Text></View>;
+  if (!match) return <View style={styles.loading}><ActivityIndicator size="large" color={COLORS.accent} /><Text style={{color: COLORS.white, marginTop: 10}}>Loading Match Details...</Text></View>;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -192,34 +192,40 @@ export const MatchDetailScreen = ({ route, navigation }) => {
 
           {activeTab === 'graphs' && (
               <View style={styles.liveContainer}>
-                  <Text style={styles.infoTitle}>Manhattan (Runs per Over)</Text>
-                  <BarChart
-                    data={{
-                      labels: (match.scoreHistory || []).map(h => h.over),
-                      datasets: [{ data: (match.scoreHistory || []).map(h => parseFloat(h.runs || 0)) }]
-                    }}
-                    width={screenWidth - 30}
-                    height={220}
-                    yAxisLabel=""
-                    chartConfig={chartConfig}
-                    verticalLabelRotation={30}
-                    style={styles.chart}
-                  />
-                  
-                  <Text style={[styles.infoTitle, {marginTop: 30}]}>Worm Chart</Text>
-                  <LineChart
-                    data={{
-                      labels: (match.scoreHistory || []).map(h => h.over),
-                      datasets: [{ data: (match.scoreHistory || []).map(h => parseFloat(h.runs || 0)) }]
-                    }}
-                    width={screenWidth - 30}
-                    height={220}
-                    chartConfig={chartConfig}
-                    bezier
-                    style={styles.chart}
-                  />
-                  {(match.scoreHistory || []).length === 0 && (
-                      <Text style={styles.commentaryText}>Gathering data points... Graphs will appear during live play.</Text>
+                  {match.scoreHistory && match.scoreHistory.length >= 2 ? (
+                    <>
+                      <Text style={styles.infoTitle}>Manhattan (Runs per Over)</Text>
+                      <BarChart
+                        data={{
+                          labels: match.scoreHistory.map(h => h.over),
+                          datasets: [{ data: match.scoreHistory.map(h => parseFloat(h.runs || 0)) }]
+                        }}
+                        width={screenWidth - 30}
+                        height={220}
+                        yAxisLabel=""
+                        chartConfig={chartConfig}
+                        verticalLabelRotation={30}
+                        style={styles.chart}
+                      />
+                      
+                      <Text style={[styles.infoTitle, {marginTop: 30}]}>Worm Chart</Text>
+                      <LineChart
+                        data={{
+                          labels: match.scoreHistory.map(h => h.over),
+                          datasets: [{ data: match.scoreHistory.map(h => parseFloat(h.runs || 0)) }]
+                        }}
+                        width={screenWidth - 30}
+                        height={220}
+                        chartConfig={chartConfig}
+                        bezier
+                        style={styles.chart}
+                      />
+                    </>
+                  ) : (
+                      <View style={{padding: 20, alignItems: 'center'}}>
+                          <ActivityIndicator size="small" color={COLORS.accent} />
+                          <Text style={styles.commentaryText}>Gathering data points... Graphs will appear during live play.</Text>
+                      </View>
                   )}
               </View>
           )}
