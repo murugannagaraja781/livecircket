@@ -4,6 +4,7 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const axios = require('axios');
 const dotenv = require('dotenv');
+const compression = require('compression');
 
 dotenv.config();
 
@@ -12,6 +13,7 @@ const logger = require('./logger');
 
 const app = express();
 app.use(cors({ origin: '*' }));
+app.use(compression());
 app.use(express.json());
 
 const server = http.createServer(app);
@@ -56,16 +58,46 @@ async function fetchAndProduce() {
             away: match.away?.name || 'Away' 
           },
           score: { 
-            home: match.home?.totalscore || 'Yet to bat', 
-            away: match.away?.totalscore || 'Yet to bat' 
+            home: match.home?.score ? `${match.home.score}/${match.home.wickets || 0}` : 'Yet to bat', 
+            away: match.away?.score ? `${match.away.score}/${match.away.wickets || 0}` : 'Yet to bat' 
           },
           status: match.status || 'Scheduled',
           live: isLive,
           finished: isFinished,
-          created_at: new Date().toISOString()
+          last_wicket: match.last_wicket || null,
+          history: [] // Added for future graph data
         };
+        
+        // --- Score History Tracking for Graphs ---
+        if (!matchHistory[match.id]) {
+          matchHistory[match.id] = payload;
+          matchHistory[match.id].scoreHistory = [];
+        } else {
+          // Update basic info
+          const oldHistory = matchHistory[match.id].scoreHistory || [];
+          matchHistory[match.id] = { ...payload, scoreHistory: oldHistory };
+        }
 
-        matchHistory[match.id] = payload;
+        // Record history point if it's a live match and the score/over changed
+        if (isLive) {
+          const currentOver = match.status?.match(/(\d+\.\d+)/)?.[0] || '0.0'; // Simple regex to find over in status
+          const currentTotal = match.home?.score || match.away?.score || '0';
+          const lastPoint = matchHistory[match.id].scoreHistory.slice(-1)[0];
+          
+          if (!lastPoint || lastPoint.over !== currentOver) {
+            matchHistory[match.id].scoreHistory.push({
+              over: currentOver,
+              runs: currentTotal,
+              timestamp: new Date().toISOString()
+            });
+            // Keep last 100 points to save memory
+            if (matchHistory[match.id].scoreHistory.length > 100) {
+              matchHistory[match.id].scoreHistory.shift();
+            }
+          }
+          // Attach history to payload for the detail request
+          payload.scoreHistory = matchHistory[match.id].scoreHistory;
+        }
         
         // Broadcast to clients via Socket.io
         io.to(`match:${match.id}`).emit('score_update', payload);
@@ -143,9 +175,9 @@ const listenPort = PORT || process.env.PORT || 4000;
 server.listen(listenPort, () => {
   logger.info('🚀 ZERO-DEPENDENCY Server listening', { port: listenPort });
   
-  // Start fetching scores immediately and every 30 seconds
+  // Start fetching scores immediately and every 10 seconds for high performance
   fetchAndProduce();
   fetchUpcoming();
-  setInterval(fetchAndProduce, 30000);
+  setInterval(fetchAndProduce, 10000); 
   setInterval(fetchUpcoming, 300000); // Fetch upcoming less frequently (every 5 mins)
 });

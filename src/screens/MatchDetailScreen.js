@@ -105,15 +105,78 @@ export const MatchDetailScreen = ({ route, navigation }) => {
               </View>
           )}
           {activeTab === 'live' && (
-              <View style={styles.infoCard}>
-                  <Text style={styles.infoTitle}>Live Commentary</Text>
-                  <Text style={styles.commentaryText}>Real-time commentary will appear here...</Text>
+              <View style={styles.liveContainer}>
+                  {/* Batters Table */}
+                  <View style={styles.statsCard}>
+                      <View style={styles.tableHeader}>
+                          <Text style={[styles.columnLabel, {flex: 3}]}>Batter</Text>
+                          <Text style={styles.columnLabel}>R</Text>
+                          <Text style={styles.columnLabel}>B</Text>
+                          <Text style={styles.columnLabel}>4s</Text>
+                          <Text style={styles.columnLabel}>6s</Text>
+                          <Text style={styles.columnLabel}>SR</Text>
+                      </View>
+                      {(match.batsmen || []).filter(b => b.out_desc === "" || b.out_desc?.toLowerCase().includes('not out')).map((b, i) => (
+                          <View key={i} style={styles.tableRow}>
+                              <Text style={[styles.playerText, {flex: 3}]}>{b.name}</Text>
+                              <Text style={styles.statText}>{b.runs}</Text>
+                              <Text style={styles.statText}>{b.balls}</Text>
+                              <Text style={styles.statText}>{b.fours}</Text>
+                              <Text style={styles.statText}>{b.sixes}</Text>
+                              <Text style={styles.statText}>{b.sr}</Text>
+                          </View>
+                      ))}
+                  </View>
+
+                  {/* Bowlers Table */}
+                  <View style={styles.statsCard}>
+                      <View style={styles.tableHeader}>
+                          <Text style={[styles.columnLabel, {flex: 3}]}>Bowler</Text>
+                          <Text style={styles.columnLabel}>O</Text>
+                          <Text style={styles.columnLabel}>M</Text>
+                          <Text style={styles.columnLabel}>R</Text>
+                          <Text style={styles.columnLabel}>W</Text>
+                          <Text style={styles.columnLabel}>ER</Text>
+                      </View>
+                      {(match.bowlers || []).slice(0, 2).map((b, i) => (
+                          <View key={i} style={styles.tableRow}>
+                              <Text style={[styles.playerText, {flex: 3}]}>{b.name}</Text>
+                              <Text style={styles.statText}>{b.overs}</Text>
+                              <Text style={styles.statText}>{b.maidens || 0}</Text>
+                              <Text style={styles.statText}>{b.runs}</Text>
+                              <Text style={styles.statText}>{b.wickets}</Text>
+                              <Text style={styles.statText}>{b.econ}</Text>
+                          </View>
+                      ))}
+                  </View>
+
+                  {/* Partnership & Last Wicket */}
+                  <View style={styles.infoCard}>
+                      <View style={styles.infoRow}>
+                          <Text style={styles.infoLabel}>Partnership</Text>
+                          <Text style={styles.infoValue}>{match.partnership || 'N/A'}</Text>
+                      </View>
+                      {match.last_wicket && (
+                        <View style={styles.infoRow}>
+                            <Text style={styles.infoLabel}>Last Wicket</Text>
+                            <Text style={styles.infoValue}>{match.last_wicket}</Text>
+                        </View>
+                      )}
+                  </View>
               </View>
           )}
           {activeTab === 'scorecard' && (
               <View style={styles.infoCard}>
                   <Text style={styles.infoTitle}>Full Scorecard</Text>
-                  <Text style={styles.commentaryText}>Detailed player statistics coming soon...</Text>
+                  {(match.batsmen || []).map((b, i) => (
+                      <View key={i} style={styles.scoreRecord}>
+                          <View style={{flex: 1}}>
+                            <Text style={styles.playerTextScore}>{b.name}</Text>
+                            <Text style={styles.outDesc}>{b.out_desc || 'batting'}</Text>
+                          </View>
+                          <Text style={styles.playerRuns}>{b.runs} ({b.balls})</Text>
+                      </View>
+                  ))}
               </View>
           )}
       </ScrollView>
@@ -153,5 +216,16 @@ const styles = StyleSheet.create({
   teamRowLarge: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
   teamNameLarge: { color: COLORS.white, fontSize: 22, fontWeight: '900' },
   vsTextLarge: { color: COLORS.accent, fontSize: 16, fontWeight: '900', marginHorizontal: 20 },
-  matchTimeText: { color: COLORS.textMuted, fontSize: 16, fontWeight: '600', fontStyle: 'italic' }
+  matchTimeText: { color: COLORS.textMuted, fontSize: 16, fontWeight: '600', fontStyle: 'italic' },
+  liveContainer: { paddingVertical: 10 },
+  statsCard: { backgroundColor: COLORS.card, borderRadius: 15, padding: 15, marginBottom: 15 },
+  tableHeader: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.1)', paddingBottom: 10, marginBottom: 10 },
+  columnLabel: { color: COLORS.textMuted, fontSize: 11, fontWeight: '700', textAlign: 'center', flex: 1 },
+  tableRow: { flexDirection: 'row', paddingVertical: 8, alignItems: 'center' },
+  playerText: { color: COLORS.white, fontSize: 13, fontWeight: '600' },
+  statText: { color: COLORS.white, fontSize: 13, textAlign: 'center', flex: 1 },
+  scoreRecord: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)' },
+  playerTextScore: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
+  outDesc: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
+  playerRuns: { color: COLORS.accent, fontSize: 14, fontWeight: '800' }
 });

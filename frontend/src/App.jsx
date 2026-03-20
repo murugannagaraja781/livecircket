@@ -9,6 +9,7 @@ function App() {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('live');
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -35,6 +36,8 @@ function App() {
         }
         return [data, ...prev];
       });
+      // Update selected match if it's the one receiving the update
+      setSelectedMatch(prev => prev && prev.id === data.id ? data : prev);
     });
 
     return () => socket.disconnect();
@@ -86,7 +89,88 @@ function App() {
         </button>
       </div>
 
-      {loading ? (
+      {selectedMatch ? (
+        <div className="match-detail glass">
+          <button className="tab" onClick={() => setSelectedMatch(null)} style={{ marginBottom: '1rem' }}>
+            ← Back to List
+          </button>
+          <div className="detail-header">
+            <h2>{selectedMatch.teams.home} vs {selectedMatch.teams.away}</h2>
+            <p className="status">{selectedMatch.status}</p>
+          </div>
+          
+          <div className="grid-2-col">
+            <div className="stats-section glass">
+              <h3>Live Batters</h3>
+              <table className="stats-table">
+                <thead>
+                  <tr>
+                    <th>Batter</th>
+                    <th>R</th>
+                    <th>B</th>
+                    <th>4s</th>
+                    <th>6s</th>
+                    <th>SR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(selectedMatch.batsmen || []).filter(b => b.out_desc === "" || b.out_desc?.toLowerCase().includes('not out')).map((b, i) => (
+                    <tr key={i}>
+                      <td>{b.name}</td>
+                      <td>{b.runs}</td>
+                      <td>{b.balls}</td>
+                      <td>{b.fours}</td>
+                      <td>{b.sixes}</td>
+                      <td>{b.sr}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="stats-section glass">
+              <h3>Live Bowler</h3>
+              <table className="stats-table">
+                <thead>
+                  <tr>
+                    <th>Bowler</th>
+                    <th>O</th>
+                    <th>M</th>
+                    <th>R</th>
+                    <th>W</th>
+                    <th>ER</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(selectedMatch.bowlers || []).slice(0, 2).map((b, i) => (
+                    <tr key={i}>
+                      <td>{b.name}</td>
+                      <td>{b.overs}</td>
+                      <td>{b.maidens || 0}</td>
+                      <td>{b.runs}</td>
+                      <td>{b.wickets}</td>
+                      <td>{b.econ}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="grid-2-col" style={{ marginTop: '1rem' }}>
+             <div className="glass" style={{ padding: '1rem' }}>
+                <h4>Partnership</h4>
+                <p>{selectedMatch.partnership || 'N/A'}</p>
+             </div>
+             {selectedMatch.last_wicket && (
+               <div className="glass" style={{ padding: '1rem' }}>
+                  <h4>Last Wicket</h4>
+                  <p>{selectedMatch.last_wicket}</p>
+               </div>
+             )}
+          </div>
+        </div>
+      ) : loading ? (
         <div style={{ textAlign: 'center', marginTop: '5rem' }}>
           <div className="badge-live badge">Loading Scores...</div>
         </div>
@@ -98,7 +182,7 @@ function App() {
             </div>
           ) : (
             filteredMatches.map((match) => (
-              <div key={match.id} className="glass match-card">
+              <div key={match.id} className="glass match-card" onClick={() => setSelectedMatch(match)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94a3b8' }}>
                     {match.series}
