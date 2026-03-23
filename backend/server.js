@@ -96,13 +96,26 @@ async function fetchAndProduce() {
               matchHistory[match.id].scoreHistory.shift();
             }
           }
-          // Attach history to payload for the detail request
-          payload.scoreHistory = matchHistory[match.id].scoreHistory;
+          // Attach history to payload for the detail request (locally in history)
+          matchHistory[match.id].scoreHistory = matchHistory[match.id].scoreHistory;
         }
         
-        // Broadcast to clients via Socket.io
+        // --- Payload Slimming for Global Broadcast ---
+        const slimPayload = {
+          id: payload.id,
+          series: payload.series,
+          teams: payload.teams,
+          score: payload.score,
+          status: payload.status,
+          live: payload.live,
+          finished: payload.finished,
+          upcoming: !!match.upcoming
+        };
+        
+        // Broadcast FULL payload ONLY to the specific match room
         io.to(`match:${match.id}`).emit('score_update', payload);
-        io.emit('score_update_global', payload);
+        // Broadcast SLIM payload to the global room
+        io.emit('score_update_global', slimPayload);
       });
     });
     logger.info('Live scores updated', { count: Object.values(matchHistory).filter(m => m.live).length });
@@ -180,13 +193,25 @@ io.on('connection', socket => {
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.get('/matches', (req, res) => {
-  // Return matches sorted by created_at desc
   const sorted = Object.values(matchHistory)
-    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+    .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
     .slice(0, 50);
   
-  // Format identically to what the frontend expects
-  res.json(sorted.map(m => ({ id: m.id, payload: m, created_at: m.created_at })));
+  // Return SLIM payloads for the match list
+  res.json(sorted.map(m => ({ 
+    id: m.id, 
+    payload: {
+      id: m.id,
+      series: m.series,
+      teams: m.teams,
+      score: m.score,
+      status: m.status,
+      live: m.live,
+      finished: m.finished,
+      upcoming: !!m.upcoming
+    }, 
+    created_at: m.created_at 
+  })));
 });
 
 app.get('/history/:id', (req, res) => {

@@ -29,34 +29,34 @@ export const MatchDetailScreen = ({ route, navigation }) => {
       </View>
 
       <View style={styles.scoreBoard}>
-        {match.upcoming ? (
+        {match?.upcoming ? (
           <View style={styles.upcomingContainer}>
             <View style={styles.teamRowLarge}>
-               <Text style={styles.teamNameLarge}>{match.teams.home}</Text>
+               <Text style={styles.teamNameLarge}>{match?.teams?.home || 'Team A'}</Text>
                <Text style={styles.vsTextLarge}>VS</Text>
-               <Text style={styles.teamNameLarge}>{match.teams.away}</Text>
+               <Text style={styles.teamNameLarge}>{match?.teams?.away || 'Team B'}</Text>
             </View>
-            <Text style={styles.matchTimeText}>Match starts at {match.status}</Text>
+            <Text style={styles.matchTimeText}>Match starts at {match?.status || 'TBD'}</Text>
           </View>
         ) : (
           <>
-            <View style={styles.scoreRow}>
+            <View style={scoreRow}>
                 <View style={styles.teamInfo}>
-                    <Text style={styles.teamNameMain}>{match.teams.home}</Text>
-                    <Text style={styles.scoreMain}>{match.score.home || '0/0'}</Text>
-                    <Text style={styles.oversMain}>({match.score.overs_home || '0.0'})</Text>
+                    <Text style={styles.teamNameMain}>{match?.teams?.home || 'Team A'}</Text>
+                    <Text style={styles.scoreMain}>{match?.score?.home || '0/0'}</Text>
+                    <Text style={styles.oversMain}>({match?.score?.overs_home || '0.0'})</Text>
                 </View>
                 <View style={styles.vsContainer}>
                     <Text style={styles.vsText}>VS</Text>
                 </View>
                 <View style={styles.teamInfo}>
-                    <Text style={styles.teamNameMain}>{match.teams.away}</Text>
-                    <Text style={styles.scoreMain}>{match.score.away || '0/0'}</Text>
-                    <Text style={styles.oversMain}>({match.score.overs_away || '0.0'})</Text>
+                    <Text style={styles.teamNameMain}>{match?.teams?.away || 'Team B'}</Text>
+                    <Text style={styles.scoreMain}>{match?.score?.away || '0/0'}</Text>
+                    <Text style={styles.oversMain}>({match?.score?.overs_away || '0.0'})</Text>
                 </View>
             </View>
             <View style={styles.statusBanner}>
-               <Text style={styles.statusMainText}>{match.status}</Text>
+               <Text style={styles.statusMainText}>{match?.status || 'Match in progress...'}</Text>
             </View>
           </>
         )}

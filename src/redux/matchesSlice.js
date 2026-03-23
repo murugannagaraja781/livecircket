@@ -3,8 +3,8 @@ import axios from 'axios';
 import { CONFIG } from '../api/config';
 
 export const fetchMatches = createAsyncThunk('matches/fetchMatches', async () => {
-  const response = await axios.get(`${CONFIG.SOCKET_SERVER}/history`);
-  return response.data;
+  const response = await axios.get(`${CONFIG.SOCKET_SERVER}/matches`);
+  return response.data; // Expected [{ id, payload: { ...slim } }]
 });
 
 export const fetchMatchDetail = createAsyncThunk('matches/fetchMatchDetail', async (matchId) => {
@@ -51,10 +51,11 @@ const matchesSlice = createSlice({
       })
       .addCase(fetchMatches.fulfilled, (state, action) => {
         state.loading = false;
-        const payload = action.payload.payload || {};
-        state.live = Object.values(payload).filter(m => m.live);
-        state.upcoming = Object.values(payload).filter(m => m.upcoming);
-        state.finished = Object.values(payload).filter(m => !m.live && !m.upcoming);
+        const matches = Array.isArray(action.payload) ? action.payload : [];
+        const formatted = matches.map(m => m.payload || m);
+        state.live = formatted.filter(m => m.live);
+        state.upcoming = formatted.filter(m => m.upcoming);
+        state.finished = formatted.filter(m => m.finished || (!m.live && !m.upcoming));
       })
       .addCase(fetchMatches.rejected, (state, action) => {
         state.loading = false;

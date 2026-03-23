@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState, useContext, useMemo, memo } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, SafeAreaView, StatusBar, RefreshControl, Alert } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchMatches } from '../redux/matchesSlice';
@@ -7,32 +7,32 @@ import { COLORS } from '../theme/colors';
 import { Trophy, Calendar, CheckCircle2, ChevronRight, LogOut } from 'lucide-react-native';
 import { AuthContext } from '../context/AuthContext';
 
-const MatchCard = ({ match, onPress }) => (
+const MatchCard = memo(({ match, onPress }) => (
   <TouchableOpacity style={styles.card} onPress={onPress}>
     <View style={styles.cardHeader}>
-      <Text style={styles.seriesName}>{match.series || 'International Cricket'}</Text>
-      <View style={match.live ? styles.liveBadge : styles.finishedBadge}>
-        <Text style={styles.badgeText}>{match.live ? 'LIVE' : 'FINISHED'}</Text>
+      <Text style={styles.seriesName}>{match?.series || 'International Cricket'}</Text>
+      <View style={match?.live ? styles.liveBadge : styles.finishedBadge}>
+        <Text style={styles.badgeText}>{match?.live ? 'LIVE' : 'FINISHED'}</Text>
       </View>
     </View>
 
     <View style={styles.teamsContainer}>
       <View style={styles.teamRow}>
-        <Text style={styles.teamName}>{match.teams.home}</Text>
-        <Text style={styles.scoreText}>{match.score?.home || '0/0'} ({match.score?.overs_home || '0.0'})</Text>
+        <Text style={styles.teamName}>{match?.teams?.home || 'Team A'}</Text>
+        <Text style={styles.scoreText}>{match?.score?.home || '0/0'} ({match?.score?.overs_home || '0.0'})</Text>
       </View>
       <View style={styles.teamRow}>
-        <Text style={styles.teamName}>{match.teams.away}</Text>
-        <Text style={styles.scoreText}>{match.score?.away || '0/0'} ({match.score?.overs_away || '0.0'})</Text>
+        <Text style={styles.teamName}>{match?.teams?.away || 'Team B'}</Text>
+        <Text style={styles.scoreText}>{match?.score?.away || '0/0'} ({match?.score?.overs_away || '0.0'})</Text>
       </View>
     </View>
 
     <View style={styles.cardFooter}>
-      <Text style={styles.statusText}>{match.status || 'Match in progress...'}</Text>
+      <Text style={styles.statusText}>{match?.status || 'Match in progress...'}</Text>
       <ChevronRight size={18} color={COLORS.textMuted} />
     </View>
   </TouchableOpacity>
-);
+));
 
 export const HomeScreen = ({ navigation }) => {
   const { logout } = useContext(AuthContext);
@@ -62,7 +62,9 @@ export const HomeScreen = ({ navigation }) => {
     setRefreshing(false);
   };
 
-  const filteredMatches = activeTab === 'live' ? live : activeTab === 'upcoming' ? upcoming : finished;
+  const filteredMatches = useMemo(() => {
+    return activeTab === 'live' ? live : activeTab === 'upcoming' ? upcoming : finished;
+  }, [activeTab, live, upcoming, finished]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -102,6 +104,10 @@ export const HomeScreen = ({ navigation }) => {
         )}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.accent} />}
         contentContainerStyle={{ paddingBottom: 20 }}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        removeClippedSubviews={true}
       />
     </SafeAreaView>
   );
