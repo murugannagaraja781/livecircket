@@ -11,6 +11,7 @@ import { MatchDetailScreen } from './src/screens/MatchDetailScreen';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { COLORS } from './src/theme/colors';
+import { CONFIG } from './src/api/config';
 
 const Stack = createStackNavigator();
 
@@ -21,7 +22,7 @@ const AppContent = () => {
   useEffect(() => {
     if (user) {
       const socket = io(CONFIG.SOCKET_SERVER);
-      socket.on('score_update', (data) => {
+      socket.on('score_update_global', (data) => {
         dispatch(updateMatch(data));
       });
       return () => socket.disconnect();

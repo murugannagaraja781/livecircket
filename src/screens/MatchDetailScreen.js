@@ -106,14 +106,14 @@ export const MatchDetailScreen = ({ route, navigation }) => {
                           <Text style={styles.columnLabel}>6s</Text>
                           <Text style={styles.columnLabel}>SR</Text>
                       </View>
-                      {(match.batsmen || []).filter(b => b.out_desc === "" || b.out_desc?.toLowerCase().includes('not out')).map((b, i) => (
+                      {(match?.batsmen || []).filter(b => b.out_desc === "" || b.out_desc?.toLowerCase().includes('not out')).map((b, i) => (
                           <View key={i} style={styles.tableRow}>
-                              <Text style={[styles.playerText, {flex: 3}]}>{b.name}</Text>
-                              <Text style={styles.statText}>{b.runs}</Text>
-                              <Text style={styles.statText}>{b.balls}</Text>
-                              <Text style={styles.statText}>{b.fours}</Text>
-                              <Text style={styles.statText}>{b.sixes}</Text>
-                              <Text style={styles.statText}>{b.sr}</Text>
+                              <Text style={[styles.playerText, {flex: 3}]}>{b?.name || 'Batter'}</Text>
+                              <Text style={styles.statText}>{b?.runs ?? 0}</Text>
+                              <Text style={styles.statText}>{b?.balls ?? 0}</Text>
+                              <Text style={styles.statText}>{b?.fours ?? 0}</Text>
+                              <Text style={styles.statText}>{b?.sixes ?? 0}</Text>
+                              <Text style={styles.statText}>{b?.sr ?? 0}</Text>
                           </View>
                       ))}
                   </View>
@@ -128,14 +128,14 @@ export const MatchDetailScreen = ({ route, navigation }) => {
                           <Text style={styles.columnLabel}>W</Text>
                           <Text style={styles.columnLabel}>ER</Text>
                       </View>
-                      {(match.bowlers || []).slice(0, 2).map((b, i) => (
+                      {(match?.bowlers || []).slice(0, 2).map((b, i) => (
                           <View key={i} style={styles.tableRow}>
-                              <Text style={[styles.playerText, {flex: 3}]}>{b.name}</Text>
-                              <Text style={styles.statText}>{b.overs}</Text>
-                              <Text style={styles.statText}>{b.maidens || 0}</Text>
-                              <Text style={styles.statText}>{b.runs}</Text>
-                              <Text style={styles.statText}>{b.wickets}</Text>
-                              <Text style={styles.statText}>{b.econ}</Text>
+                              <Text style={[styles.playerText, {flex: 3}]}>{b?.name || 'Bowler'}</Text>
+                              <Text style={styles.statText}>{b?.overs || '0.0'}</Text>
+                              <Text style={styles.statText}>{b?.maidens || 0}</Text>
+                              <Text style={styles.statText}>{b?.runs || 0}</Text>
+                              <Text style={styles.statText}>{b?.wickets || 0}</Text>
+                              <Text style={styles.statText}>{b?.econ || '0.0'}</Text>
                           </View>
                       ))}
                   </View>
@@ -144,9 +144,9 @@ export const MatchDetailScreen = ({ route, navigation }) => {
                   <View style={styles.infoCard}>
                       <View style={styles.infoRow}>
                           <Text style={styles.infoLabel}>Partnership</Text>
-                          <Text style={styles.infoValue}>{match.partnership || 'N/A'}</Text>
+                          <Text style={styles.infoValue}>{match?.partnership || 'N/A'}</Text>
                       </View>
-                      {match.last_wicket && (
+                      {match?.last_wicket && (
                         <View style={styles.infoRow}>
                             <Text style={styles.infoLabel}>Last Wicket</Text>
                             <Text style={styles.infoValue}>{match.last_wicket}</Text>
@@ -158,13 +158,13 @@ export const MatchDetailScreen = ({ route, navigation }) => {
           {activeTab === 'scorecard' && (
               <View style={styles.infoCard}>
                   <Text style={styles.infoTitle}>Full Scorecard</Text>
-                  {(match.batsmen || []).map((b, i) => (
+                  {(match?.batsmen || []).map((b, i) => (
                       <View key={i} style={styles.scoreRecord}>
                           <View style={{flex: 1}}>
-                            <Text style={styles.playerTextScore}>{b.name}</Text>
-                            <Text style={styles.outDesc}>{b.out_desc || 'batting'}</Text>
+                            <Text style={styles.playerTextScore}>{b?.name || 'Batter'}</Text>
+                            <Text style={styles.outDesc}>{b?.out_desc || 'batting'}</Text>
                           </View>
-                          <Text style={styles.playerRuns}>{b.runs} ({b.balls})</Text>
+                          <Text style={styles.playerRuns}>{b?.runs ?? 0} ({b?.balls ?? 0})</Text>
                       </View>
                   ))}
               </View>
@@ -172,7 +172,7 @@ export const MatchDetailScreen = ({ route, navigation }) => {
 
           {activeTab === 'graphs' && (
               <View style={styles.liveContainer}>
-                  {match.scoreHistory && match.scoreHistory.length >= 2 ? (
+                  {match?.scoreHistory && match.scoreHistory.length >= 2 ? (
                     <>
                       <Text style={styles.infoTitle}>Manhattan (Runs per Over)</Text>
                       <BarChart
@@ -212,18 +212,18 @@ export const MatchDetailScreen = ({ route, navigation }) => {
 
           {activeTab === 'odds' && (
               <View style={styles.liveContainer}>
-                  {match.odds ? (
+                  {match?.odds ? (
                       (match.odds.type || []).map((type, i) => (
                           <View key={i} style={styles.infoCard}>
                               <Text style={styles.infoTitle}>{type.value}</Text>
-                              {(Array.isArray(type.bookmaker) ? type.bookmaker : [type.bookmaker]).slice(0, 3).map((bk, j) => (
+                              {(Array.isArray(type?.bookmaker) ? type.bookmaker : type?.bookmaker ? [type.bookmaker] : []).slice(0, 3).map((bk, j) => (
                                   <View key={j} style={styles.oddsRow}>
-                                      <Text style={styles.bookmakerName}>{bk.name}</Text>
+                                      <Text style={styles.bookmakerName}>{bk?.name || 'Bookmaker'}</Text>
                                       <View style={{flexDirection: 'row'}}>
-                                          {(bk.odd || []).map((o, k) => (
+                                          {(bk?.odd || bk?.odds || []).map((o, k) => (
                                               <View key={k} style={styles.oddBox}>
-                                                  <Text style={styles.oddType}>{o.name[0]}</Text>
-                                                  <Text style={styles.oddValue}>{o.value}</Text>
+                                                  <Text style={styles.oddType}>{o?.name?.[0] || '?'}</Text>
+                                                  <Text style={styles.oddValue}>{o?.value || '-'}</Text>
                                               </View>
                                           ))}
                                       </View>

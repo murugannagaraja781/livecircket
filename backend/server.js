@@ -50,6 +50,41 @@ async function fetchAndProduce() {
                           statusLower.includes('no result') ||
                           statusLower.includes('finished');
 
+        // --- Enhanced Mapping for User JSON ---
+        const homeScore = match.home?.stat || match.home?.score || match.home?.totalscore || 'Yet to bat';
+        const awayScore = match.away?.stat || match.away?.score || match.away?.totalscore || 'Yet to bat';
+
+        // Extract batsmen and bowlers from innings if available
+        let batsmen = [];
+        let bowlers = [];
+        if (Array.isArray(match.inning)) {
+          // Get stats from latest inning
+          const lastInning = match.inning[match.inning.length - 1];
+          if (lastInning?.batsmanstats?.player) {
+            const players = Array.isArray(lastInning.batsmanstats.player) ? lastInning.batsmanstats.player : [lastInning.batsmanstats.player];
+            batsmen = players.map(p => ({
+              name: p.batsman || p.name || 'Unknown',
+              runs: p.r || p.runs || '0',
+              balls: p.b || p.balls || '0',
+              fours: p.s4 || p.fours || '0',
+              sixes: p.s6 || p.sixes || '0',
+              sr: p.sr || '0.0',
+              out_desc: p.status || p.out_desc || ''
+            }));
+          }
+          if (lastInning?.bowlers?.player) {
+            const players = Array.isArray(lastInning.bowlers.player) ? lastInning.bowlers.player : [lastInning.bowlers.player];
+            bowlers = players.map(p => ({
+              name: p.bowler || p.name || 'Unknown',
+              overs: p.o || p.overs || '0.0',
+              maidens: p.m || p.maidens || '0',
+              runs: p.r || p.runs || '0',
+              wickets: p.w || p.wickets || '0',
+              econ: p.er || p.econ || '0.0'
+            }));
+          }
+        }
+
         const payload = {
           id: match.id,
           matchId: match.id,
@@ -59,13 +94,15 @@ async function fetchAndProduce() {
             away: match.away?.name || 'Away' 
           },
           score: { 
-            home: match.home?.score ? `${match.home.score}/${match.home.wickets || 0}` : 'Yet to bat', 
-            away: match.away?.score ? `${match.away.score}/${match.away.wickets || 0}` : 'Yet to bat' 
+            home: homeScore, 
+            away: awayScore 
           },
-          status: match.status || 'Scheduled',
+          status: match.comment?.post || match.status || 'Scheduled',
           live: isLive,
           finished: isFinished,
           last_wicket: match.last_wicket || null,
+          batsmen,
+          bowlers,
           history: [] // Added for future graph data
         };
         
@@ -74,6 +111,8 @@ async function fetchAndProduce() {
           matchHistory[match.id] = payload;
           matchHistory[match.id].scoreHistory = [];
         } else {
+          // Keep old history
+          const oldHistory = matchHistory[match.id].scoreHistory || [];
           // Attach odds if available
           payload.odds = matchOdds[match.id] || null;
           matchHistory[match.id] = { ...payload, scoreHistory: oldHistory };
@@ -81,8 +120,8 @@ async function fetchAndProduce() {
 
         // Record history point if it's a live match and the score/over changed
         if (isLive) {
-          const currentOver = match.status?.match(/(\d+\.\d+)/)?.[0] || '0.0'; // Simple regex to find over in status
-          const currentTotal = match.home?.score || match.away?.score || '0';
+          const currentOver = match.status?.match(/(\d+\.\d+)/)?.[0] || (Array.isArray(match.inning) && match.inning.slice(-1)[0]?.total?.tot?.match(/\(\s*(\d+)/)?.[1]) || '0.0';
+          const currentTotal = match.home?.score || match.home?.totalscore || '0';
           const lastPoint = matchHistory[match.id].scoreHistory.slice(-1)[0];
           
           if (!lastPoint || lastPoint.over !== currentOver) {
@@ -91,13 +130,11 @@ async function fetchAndProduce() {
               runs: currentTotal,
               timestamp: new Date().toISOString()
             });
-            // Keep last 100 points to save memory
+            // Keep last 100 points
             if (matchHistory[match.id].scoreHistory.length > 100) {
               matchHistory[match.id].scoreHistory.shift();
             }
           }
-          // Attach history to payload for the detail request (locally in history)
-          matchHistory[match.id].scoreHistory = matchHistory[match.id].scoreHistory;
         }
         
         // --- Payload Slimming for Global Broadcast ---
@@ -137,8 +174,16 @@ async function fetchUpcoming() {
       matches.forEach(match => {
         if (!match || !match.id) return;
 
-        // Only add if not already in history (to avoid overwriting live scores with scheduled info)
+        // Only add if not already in history
         if (!matchHistory[match.id]) {
+          // Extract venue from matchinfo.info if available
+          let venue = 'TBD';
+          if (match.matchinfo?.info) {
+            const infoArray = Array.isArray(match.matchinfo.info) ? match.matchinfo.info : [match.matchinfo.info];
+            const venueInfo = infoArray.find(i => i.name === 'Venue' || i.name === 'City');
+            if (venueInfo) venue = venueInfo.value;
+          }
+
           const payload = {
             id: match.id,
             matchId: match.id,
@@ -148,7 +193,8 @@ async function fetchUpcoming() {
               away: match.away?.name || match.away_name || 'Away Team' 
             },
             score: { home: 'Upcoming', away: 'Upcoming' },
-            status: `${match.date} at ${match.time}`,
+            status: match.time ? `${match.date} at ${match.time}` : match.date || 'Scheduled',
+            venue: venue,
             live: false,
             upcoming: true,
             created_at: new Date().toISOString()
@@ -171,11 +217,14 @@ async function fetchOdds() {
 
     const categories = Array.isArray(data.odds.category) ? data.odds.category : [data.odds.category];
     categories.forEach(cat => {
-      const matches = cat.matches?.match || [];
+      // The new structure has cat.matches.match instead of just cat.match
+      let matches = cat.matches?.match || cat.match || [];
       const matchArray = Array.isArray(matches) ? matches : [matches];
+      
       matchArray.forEach(m => {
-        if (m.id) {
-          matchOdds[m.id] = m.odds; // Store odds by match ID
+        if (m && m.id) {
+          // Store the entire odds object for the matchId
+          matchOdds[m.id] = m.odds; 
         }
       });
     });

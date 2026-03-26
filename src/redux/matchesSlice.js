@@ -20,6 +20,7 @@ const DUMMY_MATCHES = [
     teams: { home: "India", away: "Australia" },
     score: { home: "185/4", away: "162/6", overs_home: "18.2", overs_away: "17.5" },
     status: "India won by 23 runs",
+    venue: "Narendra Modi Stadium, Ahmedabad",
     batsmen: [
       { name: "Virat Kohli", runs: 82, balls: 53, fours: 6, sixes: 3, sr: 154.7, out_desc: "not out" },
       { name: "Rohit Sharma", runs: 45, balls: 30, fours: 4, sixes: 2, sr: 150.0, out_desc: "c Smith b Cummins" }
@@ -35,6 +36,7 @@ const DUMMY_MATCHES = [
     upcoming: true,
     teams: { home: "England", away: "Pakistan" },
     status: "Starts in 2 hours",
+    venue: "Lord's, London",
     batsmen: [],
     bowlers: []
   }
