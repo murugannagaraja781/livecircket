@@ -39,15 +39,31 @@ const DUMMY_MATCHES = [
     venue: "Lord's, London",
     batsmen: [],
     bowlers: []
+  },
+  {
+    id: "dummy-3",
+    series: "IPL 2024",
+    finished: true,
+    teams: { home: "CSK", away: "MI" },
+    score: { home: "210/4", away: "190/8" },
+    status: "CSK won by 20 runs",
+    venue: "MA Chidambaram Stadium, Chennai",
+    batsmen: [],
+    bowlers: []
   }
 ];
+
+const INITIAL_FORMATTED = DUMMY_MATCHES;
+const INITIAL_LIVE = INITIAL_FORMATTED.filter(m => m.live);
+const INITIAL_UPCOMING = INITIAL_FORMATTED.filter(m => m.upcoming);
+const INITIAL_FINISHED = INITIAL_FORMATTED.filter(m => m.finished || (!m.live && !m.upcoming));
 
 const matchesSlice = createSlice({
   name: 'matches',
   initialState: {
-    live: [],
-    upcoming: [],
-    finished: [],
+    live: INITIAL_LIVE,
+    upcoming: INITIAL_UPCOMING,
+    finished: INITIAL_FINISHED,
     details: {}, // matchId -> details
     loading: false,
     error: null,
