@@ -130,7 +130,25 @@ const matchesSlice = createSlice({
       .addCase(fetchMatches.fulfilled, (state, action) => {
         state.loading = false;
         const matches = Array.isArray(action.payload) ? action.payload : [];
-        const formatted = matches.length > 0 ? matches.map(m => m.payload || m) : DUMMY_MATCHES;
+        if (matches.length === 0) {
+          state.live = DUMMY_MATCHES.filter(m => m.live);
+          state.upcoming = DUMMY_MATCHES.filter(m => m.upcoming);
+          state.finished = DUMMY_MATCHES.filter(m => m.finished || (!m.live && !m.upcoming));
+          return;
+        }
+        
+        const formatted = matches.map(m => {
+          const payload = m.payload || m;
+          const dummy = DUMMY_MATCHES[0];
+          // Deep merge for list items
+          return {
+            ...dummy,
+            ...payload,
+            score: { ...dummy.score, ...payload?.score },
+            teams: { ...dummy.teams, ...payload?.teams }
+          };
+        });
+        
         state.live = formatted.filter(m => m.live);
         state.upcoming = formatted.filter(m => m.upcoming);
         state.finished = formatted.filter(m => m.finished || (!m.live && !m.upcoming));
@@ -138,22 +156,30 @@ const matchesSlice = createSlice({
       .addCase(fetchMatches.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
-        // Load dummy data on failure
         state.live = DUMMY_MATCHES.filter(m => m.live);
         state.upcoming = DUMMY_MATCHES.filter(m => m.upcoming);
         state.finished = DUMMY_MATCHES.filter(m => m.finished || (!m.live && !m.upcoming));
       })
       .addCase(fetchMatchDetail.fulfilled, (state, action) => {
         const { matchId, data } = action.payload;
-        state.details[matchId] = data;
+        const dummy = DUMMY_MATCHES[0];
+        // Deep merge for details
+        state.details[matchId] = {
+           ...dummy,
+           ...data,
+           score: { ...dummy.score, ...data?.score },
+           teams: { ...dummy.teams, ...data?.teams },
+           batsmen: data?.batsmen?.length > 0 ? data.batsmen : dummy.batsmen,
+           bowlers: data?.bowlers?.length > 0 ? data.bowlers : dummy.bowlers,
+           recent_balls: data?.recent_balls?.length > 0 ? data.recent_balls : dummy.recent_balls,
+           odds: data?.odds || dummy.odds,
+           scoreHistory: data?.scoreHistory?.length > 0 ? data.scoreHistory : dummy.scoreHistory
+        };
       })
       .addCase(fetchMatchDetail.rejected, (state, action) => {
         const matchId = action.meta.arg;
-        // Fallback to dummy detail if available
-        const dummy = DUMMY_MATCHES.find(m => m.id === matchId);
-        if (dummy) {
-          state.details[matchId] = dummy;
-        }
+        const dummy = DUMMY_MATCHES.find(m => m.id === matchId) || DUMMY_MATCHES[0];
+        state.details[matchId] = dummy;
       });
   },
 });
