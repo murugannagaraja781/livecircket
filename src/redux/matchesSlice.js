@@ -172,8 +172,8 @@ const matchesSlice = createSlice({
            batsmen: data?.batsmen?.length > 0 ? data.batsmen : dummy.batsmen,
            bowlers: data?.bowlers?.length > 0 ? data.bowlers : dummy.bowlers,
            recent_balls: data?.recent_balls?.length > 0 ? data.recent_balls : dummy.recent_balls,
-           odds: data?.odds || dummy.odds,
-           scoreHistory: data?.scoreHistory?.length > 0 ? data.scoreHistory : dummy.scoreHistory
+           odds: (data?.odds && (data.odds.type || data.odds.bookmaker)) ? data.odds : dummy.odds,
+           scoreHistory: (data?.scoreHistory && data.scoreHistory.length >= 2) ? data.scoreHistory : dummy.scoreHistory
         };
       })
       .addCase(fetchMatchDetail.rejected, (state, action) => {
