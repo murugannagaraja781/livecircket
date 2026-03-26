@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchMatchDetail } from '../redux/matchesSlice';
 import { Dimensions, View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
-import { ArrowLeft, Share2, Info, ListChecks, PlayCircle, BarChart2, DollarSign } from 'lucide-react-native';
+import { ArrowLeft, Share2, Info, ListChecks, PlayCircle, BarChart2, DollarSign, ChevronRight, Activity, TrendingUp } from 'lucide-react-native';
 import { LineChart, BarChart } from 'react-native-chart-kit';
 import { COLORS } from '../theme/colors';
 
@@ -96,21 +96,52 @@ export const MatchDetailScreen = ({ route, navigation }) => {
           )}
           {activeTab === 'live' && (
               <View style={styles.liveContainer}>
+                  {/* Over Timeline */}
+                  <View style={styles.timelineContainer}>
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timelineScroll}>
+                      <Text style={styles.overLabel}>Over {Math.floor((parseFloat(match?.score?.overs_home || '0.0')))}</Text>
+                      {(match?.recent_balls || []).map((ball, idx) => (
+                        <View key={idx} style={[
+                          styles.ballBadge,
+                          ball === '4' && styles.fourBadge,
+                          ball === '6' && styles.sixBadge,
+                          (ball === 'W' || ball?.toString().includes('W')) && styles.wicketBadge
+                        ]}>
+                          <Text style={styles.ballText}>{ball}</Text>
+                        </View>
+                      ))}
+                    </ScrollView>
+                  </View>
+
+                  {/* Metrics Row */}
+                  <View style={styles.metricsRow}>
+                    <View style={styles.metricItem}>
+                      <Text style={styles.metricLabel}>CRR</Text>
+                      <Text style={styles.metricValue}>{match?.crr || '0.00'}</Text>
+                    </View>
+                    <View style={styles.metricItem}>
+                      <Text style={styles.metricLabel}>RRR</Text>
+                      <Text style={styles.metricValue}>{match?.rrr || '0.00'}</Text>
+                    </View>
+                    <View style={styles.metricItem}>
+                      <Text style={styles.metricLabel}>Target</Text>
+                      <Text style={styles.metricValue}>{match?.target || '--'}</Text>
+                    </View>
+                  </View>
+
                   {/* Batters Table */}
                   <View style={styles.statsCard}>
                       <View style={styles.tableHeader}>
-                          <Text style={[styles.columnLabel, {flex: 3}]}>Batter</Text>
-                          <Text style={styles.columnLabel}>R</Text>
-                          <Text style={styles.columnLabel}>B</Text>
+                          <Text style={[styles.columnLabel, {flex: 3, textAlign: 'left'}]}>Batter</Text>
+                          <Text style={styles.columnLabel}>R(B)</Text>
                           <Text style={styles.columnLabel}>4s</Text>
                           <Text style={styles.columnLabel}>6s</Text>
                           <Text style={styles.columnLabel}>SR</Text>
                       </View>
-                      {(match?.batsmen || []).filter(b => b.out_desc === "" || b.out_desc?.toLowerCase().includes('not out')).map((b, i) => (
+                      {(match?.batsmen || []).map((b, i) => (
                           <View key={i} style={styles.tableRow}>
                               <Text style={[styles.playerText, {flex: 3}]}>{b?.name || 'Batter'}</Text>
-                              <Text style={styles.statText}>{b?.runs ?? 0}</Text>
-                              <Text style={styles.statText}>{b?.balls ?? 0}</Text>
+                              <Text style={styles.statText}>{b?.runs ?? 0}({b?.balls ?? 0})</Text>
                               <Text style={styles.statText}>{b?.fours ?? 0}</Text>
                               <Text style={styles.statText}>{b?.sixes ?? 0}</Text>
                               <Text style={styles.statText}>{b?.sr ?? 0}</Text>
@@ -121,37 +152,26 @@ export const MatchDetailScreen = ({ route, navigation }) => {
                   {/* Bowlers Table */}
                   <View style={styles.statsCard}>
                       <View style={styles.tableHeader}>
-                          <Text style={[styles.columnLabel, {flex: 3}]}>Bowler</Text>
-                          <Text style={styles.columnLabel}>O</Text>
-                          <Text style={styles.columnLabel}>M</Text>
-                          <Text style={styles.columnLabel}>R</Text>
-                          <Text style={styles.columnLabel}>W</Text>
-                          <Text style={styles.columnLabel}>ER</Text>
+                          <Text style={[styles.columnLabel, {flex: 3, textAlign: 'left'}]}>Bowler</Text>
+                          <Text style={styles.columnLabel}>W-R</Text>
+                          <Text style={styles.columnLabel}>Ov</Text>
+                          <Text style={styles.columnLabel}>Eco</Text>
                       </View>
-                      {(match?.bowlers || []).slice(0, 2).map((b, i) => (
+                      {(match?.bowlers || []).map((b, i) => (
                           <View key={i} style={styles.tableRow}>
                               <Text style={[styles.playerText, {flex: 3}]}>{b?.name || 'Bowler'}</Text>
+                              <Text style={styles.statText}>{b?.wickets ?? 0}-{b?.runs ?? 0}</Text>
                               <Text style={styles.statText}>{b?.overs || '0.0'}</Text>
-                              <Text style={styles.statText}>{b?.maidens || 0}</Text>
-                              <Text style={styles.statText}>{b?.runs || 0}</Text>
-                              <Text style={styles.statText}>{b?.wickets || 0}</Text>
                               <Text style={styles.statText}>{b?.econ || '0.0'}</Text>
                           </View>
                       ))}
                   </View>
 
-                  {/* Partnership & Last Wicket */}
+                  {/* Partnership */}
                   <View style={styles.infoCard}>
-                      <View style={styles.infoRow}>
-                          <Text style={styles.infoLabel}>Partnership</Text>
-                          <Text style={styles.infoValue}>{match?.partnership || 'N/A'}</Text>
+                      <View style={styles.infoRowFlat}>
+                          <Text style={styles.infoLabel}>Partnership: {match?.partnership || '5 (8)'}</Text>
                       </View>
-                      {match?.last_wicket && (
-                        <View style={styles.infoRow}>
-                            <Text style={styles.infoLabel}>Last Wicket</Text>
-                            <Text style={styles.infoValue}>{match.last_wicket}</Text>
-                        </View>
-                      )}
                   </View>
               </View>
           )}
@@ -172,39 +192,53 @@ export const MatchDetailScreen = ({ route, navigation }) => {
 
           {activeTab === 'graphs' && (
               <View style={styles.liveContainer}>
+                  {/* Innings Toggle */}
+                  <View style={styles.inningsToggleRow}>
+                    <TouchableOpacity style={[styles.inningBtn, styles.activeInningBtn]}>
+                        <Text style={styles.activeInningText}>1st Inns</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.inningBtn}>
+                        <Text style={styles.inningText}>2nd Inns</Text>
+                    </TouchableOpacity>
+                  </View>
+
                   {match?.scoreHistory && match.scoreHistory.length >= 2 ? (
                     <>
-                      <Text style={styles.infoTitle}>Manhattan (Runs per Over)</Text>
-                      <BarChart
-                        data={{
-                          labels: match.scoreHistory.map(h => h.over),
-                          datasets: [{ data: match.scoreHistory.map(h => parseFloat(h.runs || 0)) }]
-                        }}
-                        width={screenWidth - 30}
-                        height={220}
-                        yAxisLabel=""
-                        chartConfig={chartConfig}
-                        verticalLabelRotation={30}
-                        style={styles.chart}
-                      />
+                      <View style={styles.graphCardPremium}>
+                        <View style={styles.graphHeader}>
+                            <Text style={styles.graphTitleCompact}>Score Progression</Text>
+                            <TouchableOpacity><Text style={styles.fullScreenText}>Full Screen</Text></TouchableOpacity>
+                        </View>
+                        <LineChart
+                          data={{
+                            labels: match.scoreHistory.filter((_, i) => i % 5 === 0).map(h => h.over),
+                            datasets: [{ 
+                              data: match.scoreHistory.map(h => parseFloat(h.runs || 0)),
+                              color: (opacity = 1) => `rgba(239, 68, 68, ${opacity})`, // Team NZ color from screen
+                            }]
+                          }}
+                          width={screenWidth - 40}
+                          height={180}
+                          chartConfig={chartConfigPremium}
+                          bezier
+                          style={styles.chart}
+                        />
+                      </View>
                       
-                      <Text style={[styles.infoTitle, {marginTop: 30}]}>Worm Chart</Text>
-                      <LineChart
-                        data={{
-                          labels: match.scoreHistory.map(h => h.over),
-                          datasets: [{ data: match.scoreHistory.map(h => parseFloat(h.runs || 0)) }]
-                        }}
-                        width={screenWidth - 30}
-                        height={220}
-                        chartConfig={chartConfig}
-                        bezier
-                        style={styles.chart}
-                      />
+                      <TouchableOpacity style={styles.expandableRow}>
+                        <Text style={styles.expandableLabel}>Manhattan</Text>
+                        <ChevronRight color={COLORS.textMuted} size={20} />
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity style={styles.expandableRow}>
+                        <Text style={styles.expandableLabel}>Worm</Text>
+                        <ChevronRight color={COLORS.textMuted} size={20} />
+                      </TouchableOpacity>
                     </>
                   ) : (
-                      <View style={{padding: 20, alignItems: 'center'}}>
+                      <View style={{padding: 40, alignItems: 'center'}}>
                           <ActivityIndicator size="small" color={COLORS.accent} />
-                          <Text style={styles.commentaryText}>Gathering data points... Graphs will appear during live play.</Text>
+                          <Text style={styles.commentaryText}>Gathering graph data...</Text>
                       </View>
                   )}
               </View>
@@ -257,8 +291,24 @@ const styles = StyleSheet.create({
   oversMain: { color: COLORS.textMuted, fontSize: 14 },
   vsContainer: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.05)', justifyContent: 'center', alignItems: 'center' },
   vsText: { color: COLORS.accent, fontWeight: '900', fontSize: 12 },
-  statusBanner: { marginTop: 20, backgroundColor: 'rgba(245, 158, 11, 0.1)', paddingVertical: 8, borderRadius: 10, alignItems: 'center' },
-  statusMainText: { color: COLORS.accent, fontSize: 13, fontWeight: '700' },
+  statusBanner: { marginTop: 15, backgroundColor: 'rgba(245, 158, 11, 0.05)', paddingVertical: 10, borderRadius: 12, alignItems: 'center' },
+  statusMainText: { color: "#f59e0b", fontSize: 13, fontWeight: '700' },
+  
+  timelineContainer: { marginBottom: 15, paddingVertical: 12, backgroundColor: COLORS.card, borderRadius: 15 },
+  timelineScroll: { paddingHorizontal: 15, alignItems: 'center' },
+  overLabel: { color: COLORS.textMuted, marginRight: 15, fontWeight: '800', fontSize: 13 },
+  ballBadge: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#334155', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  fourBadge: { backgroundColor: '#2563eb' },
+  sixBadge: { backgroundColor: '#7c3aed' },
+  wicketBadge: { backgroundColor: '#dc2626' },
+  ballText: { color: COLORS.white, fontWeight: '900', fontSize: 12 },
+
+  metricsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, backgroundColor: COLORS.card, padding: 15, borderRadius: 15 },
+  metricItem: { alignItems: 'center', flex: 1 },
+  metricLabel: { color: COLORS.textMuted, fontSize: 11, fontWeight: '700', marginBottom: 4 },
+  metricValue: { color: COLORS.white, fontSize: 15, fontWeight: '800' },
+
+  infoRowFlat: { alignItems: 'center', paddingVertical: 5 },
   tabBar: { flexDirection: 'row', backgroundColor: COLORS.secondary, borderBottomWidth: 1, borderBottomColor: COLORS.border },
   tab: { flex: 1, alignItems: 'center', paddingVertical: 15, flexDirection: 'row', justifyContent: 'center', paddingHorizontal: 5 },
   activeTab: { borderBottomWidth: 2, borderBottomColor: COLORS.accent },
@@ -287,13 +337,32 @@ const styles = StyleSheet.create({
   playerTextScore: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
   outDesc: { color: COLORS.textMuted, fontSize: 11, marginTop: 2 },
   playerRuns: { color: COLORS.accent, fontSize: 14, fontWeight: '800' },
-  chart: { marginVertical: 8, borderRadius: 16 },
-  oddsRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 10, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.05)', paddingBottom: 10 },
-  bookmakerName: { color: COLORS.textMuted, fontSize: 12, fontWeight: '700' },
-  oddBox: { backgroundColor: 'rgba(245, 158, 11, 0.1)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, marginLeft: 8, alignItems: 'center', minWidth: 40 },
-  oddType: { color: COLORS.textMuted, fontSize: 8, fontWeight: '900' },
-  oddValue: { color: COLORS.accent, fontSize: 12, fontWeight: '900' }
+  inningsToggleRow: { flexDirection: 'row', gap: 10, marginBottom: 20, paddingHorizontal: 5 },
+  inningBtn: { flex: 1, paddingVertical: 10, borderRadius: 10, backgroundColor: COLORS.card, alignItems: 'center', borderWidth: 1, borderColor: '#334155' },
+  activeInningBtn: { backgroundColor: '#1d4ed8', borderColor: '#3b82f6' },
+  inningText: { color: COLORS.textMuted, fontWeight: '700', fontSize: 13 },
+  activeInningText: { color: COLORS.white, fontWeight: '800', fontSize: 13 },
+
+  graphCardPremium: { backgroundColor: COLORS.card, borderRadius: 15, padding: 15, marginBottom: 15 },
+  graphHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 15 },
+  graphTitleCompact: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
+  fullScreenText: { color: '#3b82f6', fontSize: 13, fontWeight: '600' },
+  
+  expandableRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: COLORS.card, padding: 18, borderRadius: 15, marginBottom: 10 },
+  expandableLabel: { color: COLORS.white, fontSize: 14, fontWeight: '700' },
+
+  chart: { marginVertical: 8, borderRadius: 16 }
 });
+
+const chartConfigPremium = {
+  backgroundGradientFrom: COLORS.card,
+  backgroundGradientTo: COLORS.card,
+  color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+  labelColor: (opacity = 1) => `rgba(148, 163, 184, ${opacity})`,
+  strokeWidth: 2,
+  propsForDots: { r: "3", strokeWidth: "1", stroke: "#ef4444" },
+  decimalPlaces: 0
+};
 
 const chartConfig = {
     backgroundGradientFrom: COLORS.primary,

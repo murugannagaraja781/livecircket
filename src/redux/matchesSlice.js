@@ -21,6 +21,10 @@ const DUMMY_MATCHES = [
     score: { home: "185/4", away: "162/6", overs_home: "18.2", overs_away: "17.5" },
     status: "India won by 23 runs",
     venue: "Narendra Modi Stadium, Ahmedabad",
+    crr: "10.09",
+    rrr: "8.10",
+    target: "186",
+    recent_balls: ["0", "0", "1", "4", "0", "4"],
     odds: {
       type: {
         value: "Home/Away",

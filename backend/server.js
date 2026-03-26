@@ -85,6 +85,49 @@ async function fetchAndProduce() {
           }
         }
 
+        // --- Advanced Calculations for CRR, RRR, Target ---
+        const homeRuns = parseInt(match.home?.totalscore || match.home?.score || '0');
+        const awayRuns = parseInt(match.away?.totalscore || match.away?.score || '0');
+        
+        // Extract overs from status or total
+        const currentOverStr = match.status?.match(/(\d+\.\d+)/)?.[0] || '0.0';
+        const [overNum, ballNum] = currentOverStr.split('.').map(n => parseInt(n) || 0);
+        const totalBalls = overNum * 6 + ballNum;
+        
+        const crr = totalBalls > 0 ? ((isLive && statusLower.includes('inn')) ? (awayRuns / (totalBalls / 6)).toFixed(2) : (homeRuns / (totalBalls / 6)).toFixed(2)) : '0.00';
+        
+        // Simple Target logic: if it's the second innings, look for a target
+        let target = null;
+        let rrr = null;
+        if (statusLower.includes('2nd inn') || statusLower.includes('target')) {
+          target = homeRuns + 1; // Assuming home batted first
+          const runsNeeded = target - awayRuns;
+          const ballsRemaining = 120 - totalBalls; // Assuming T20 for RRR calculation
+          rrr = ballsRemaining > 0 ? ((runsNeeded / (ballsRemaining / 6))).toFixed(2) : '0.00';
+        }
+
+        // --- Over Timeline (recent_balls) ---
+        if (!matchHistory[match.id]) {
+          matchHistory[match.id] = { recent_balls: [] };
+        }
+        
+        // Extract last ball event from commentary if available
+        const lastComm = match.commentaries?.commentary?.[0];
+        if (lastComm && lastComm.runs !== undefined) {
+          const ballKey = `${lastComm.id}`;
+          if (!matchHistory[match.id].last_ball_id || matchHistory[match.id].last_ball_id !== ballKey) {
+            matchHistory[match.id].last_ball_id = ballKey;
+            const ballEvent = lastComm.iswicket === 'True' ? 'W' : 
+                              lastComm.isfour === 'True' ? '4' :
+                              lastComm.issix === 'True' ? '6' : lastComm.runs;
+            
+            matchHistory[match.id].recent_balls.push(ballEvent);
+            if (matchHistory[match.id].recent_balls.length > 12) {
+              matchHistory[match.id].recent_balls.shift();
+            }
+          }
+        }
+
         const payload = {
           id: match.id,
           matchId: match.id,
@@ -101,9 +144,13 @@ async function fetchAndProduce() {
           live: isLive,
           finished: isFinished,
           last_wicket: match.last_wicket || null,
+          crr,
+          rrr,
+          target,
+          recent_balls: matchHistory[match.id].recent_balls,
           batsmen,
           bowlers,
-          history: [] // Added for future graph data
+          history: [] 
         };
         
         // --- Score History Tracking for Graphs ---
