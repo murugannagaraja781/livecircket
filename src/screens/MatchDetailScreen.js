@@ -252,14 +252,14 @@ export const MatchDetailScreen = ({ route, navigation }) => {
           {activeTab === 'odds' && (
               <View style={styles.liveContainer}>
                   {match?.odds ? (
-                      (match.odds.type || []).map((type, i) => (
+                      (Array.isArray(match.odds.type) ? match.odds.type : match?.odds?.type ? [match.odds.type] : []).map((type, i) => (
                           <View key={i} style={styles.infoCard}>
                               <Text style={styles.infoTitle}>{type.value}</Text>
                               {(Array.isArray(type?.bookmaker) ? type.bookmaker : type?.bookmaker ? [type.bookmaker] : []).slice(0, 3).map((bk, j) => (
                                   <View key={j} style={styles.oddsRow}>
                                       <Text style={styles.bookmakerName}>{bk?.name || 'Bookmaker'}</Text>
                                       <View style={{flexDirection: 'row'}}>
-                                          {(bk?.odd || bk?.odds || []).map((o, k) => (
+                                          {(Array.isArray(bk?.odd) ? bk.odd : bk?.odd ? [bk.odd] : (Array.isArray(bk?.odds) ? bk.odds : [])).map((o, k) => (
                                               <View key={k} style={styles.oddBox}>
                                                   <Text style={styles.oddType}>{o?.name?.[0] || '?'}</Text>
                                                   <Text style={styles.oddValue}>{o?.value || '-'}</Text>
