@@ -21,6 +21,27 @@ const DUMMY_MATCHES = [
     score: { home: "185/4", away: "162/6", overs_home: "18.2", overs_away: "17.5" },
     status: "India won by 23 runs",
     venue: "Narendra Modi Stadium, Ahmedabad",
+    odds: {
+      type: {
+        value: "Home/Away",
+        bookmaker: [
+          {
+            name: "Marathon",
+            odd: [
+              { name: "Home", value: "1.67" },
+              { name: "Away", value: "2.07" }
+            ]
+          },
+          {
+            name: "1xBet",
+            odd: [
+              { name: "Home", value: "1.70" },
+              { name: "Away", value: "2.17" }
+            ]
+          }
+        ]
+      }
+    },
     batsmen: [
       { name: "Virat Kohli", runs: 82, balls: 53, fours: 6, sixes: 3, sr: 154.7, out_desc: "not out" },
       { name: "Rohit Sharma", runs: 45, balls: 30, fours: 4, sixes: 2, sr: 150.0, out_desc: "c Smith b Cummins" }
