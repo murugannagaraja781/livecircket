@@ -100,16 +100,21 @@ export const MatchDetailScreen = ({ route, navigation }) => {
                   <View style={styles.timelineContainer}>
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timelineScroll}>
                       <Text style={styles.overLabel}>Over {Math.floor((parseFloat(match?.score?.overs_home || '0.0')))}</Text>
-                      {(match?.recent_balls || []).map((ball, idx) => (
-                        <View key={idx} style={[
-                          styles.ballBadge,
-                          ball === '4' && styles.fourBadge,
-                          ball === '6' && styles.sixBadge,
-                          (ball === 'W' || ball?.toString().includes('W')) && styles.wicketBadge
-                        ]}>
-                          <Text style={styles.ballText}>{ball}</Text>
-                        </View>
-                      ))}
+                      {(match?.recent_balls || []).map((ball, idx) => {
+                        if (ball?.toString().startsWith('Over')) {
+                          return <Text key={idx} style={styles.overMarkerText}>{ball}</Text>;
+                        }
+                        return (
+                          <View key={idx} style={[
+                            styles.ballBadge,
+                            ball === '4' && styles.fourBadge,
+                            ball === '6' && styles.sixBadge,
+                            (ball === 'W' || ball?.toString().includes('W')) && styles.wicketBadge
+                          ]}>
+                            <Text style={styles.ballText}>{ball}</Text>
+                          </View>
+                        );
+                      })}
                     </ScrollView>
                   </View>
 
@@ -302,6 +307,7 @@ const styles = StyleSheet.create({
   sixBadge: { backgroundColor: '#7c3aed' },
   wicketBadge: { backgroundColor: '#dc2626' },
   ballText: { color: COLORS.white, fontWeight: '900', fontSize: 12 },
+  overMarkerText: { color: COLORS.white, marginHorizontal: 15, fontWeight: 'bold', fontSize: 13 },
 
   metricsRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 15, backgroundColor: COLORS.card, padding: 15, borderRadius: 15 },
   metricItem: { alignItems: 'center', flex: 1 },

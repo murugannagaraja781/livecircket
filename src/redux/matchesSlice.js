@@ -15,16 +15,24 @@ export const fetchMatchDetail = createAsyncThunk('matches/fetchMatchDetail', asy
 const DUMMY_MATCHES = [
   {
     id: "dummy-1",
-    series: "International T20 League",
+    series: "SA vs NZ, 3rd T20",
     live: true,
-    teams: { home: "India", away: "Australia" },
-    score: { home: "185/4", away: "162/6", overs_home: "18.2", overs_away: "17.5" },
-    status: "India won by 23 runs",
-    venue: "Narendra Modi Stadium, Ahmedabad",
-    crr: "10.09",
-    rrr: "8.10",
-    target: "186",
-    recent_balls: ["0", "0", "1", "4", "0", "4"],
+    teams: { home: "South Africa", away: "New Zealand" },
+    score: { home: "136/10", away: "5/0", overs_home: "20.0", overs_away: "1.2" },
+    status: "NZ need 132 runs in 112 balls",
+    venue: "City Oval, Pietermaritzburg",
+    crr: "3.75",
+    rrr: "7.07",
+    target: "137",
+    recent_balls: ["0", "0", "1", "Over 2", "0", "4"],
+    partnership: "5 (8)",
+    scoreHistory: [
+      { over: "0", runs: "0" },
+      { over: "0.2", runs: "1" },
+      { over: "0.4", runs: "1" },
+      { over: "1.0", runs: "4" },
+      { over: "1.2", runs: "5" }
+    ],
     odds: {
       type: {
         value: "Home/Away",
@@ -47,12 +55,11 @@ const DUMMY_MATCHES = [
       }
     },
     batsmen: [
-      { name: "Virat Kohli", runs: 82, balls: 53, fours: 6, sixes: 3, sr: 154.7, out_desc: "not out" },
-      { name: "Rohit Sharma", runs: 45, balls: 30, fours: 4, sixes: 2, sr: 150.0, out_desc: "c Smith b Cummins" }
+      { name: "Devon Conway", runs: 5, balls: 3, fours: 1, sixes: 0, sr: 166.7, out_desc: "not out" },
+      { name: "Tom Latham", runs: 0, balls: 5, fours: 0, sixes: 0, sr: 0.0, out_desc: "not out" }
     ],
     bowlers: [
-      { name: "Pat Cummins", overs: 4, maidens: 0, runs: 35, wickets: 2, econ: 8.75 },
-      { name: "Mitchell Starc", overs: 4, maidens: 0, runs: 42, wickets: 1, econ: 10.5 }
+      { name: "Lutho Sipamla", overs: "0.2", maidens: 0, runs: 4, wickets: 0, econ: 12.00 }
     ]
   },
   {
