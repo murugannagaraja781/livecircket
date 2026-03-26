@@ -24,7 +24,7 @@ export const MatchDetailScreen = ({ route, navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}><ArrowLeft size={24} color={COLORS.white} /></TouchableOpacity>
-        <Text style={styles.headerTitle}>{match.teams.home} vs {match.teams.away}</Text>
+        <Text style={styles.headerTitle}>{match?.teams?.home || 'Team'} vs {match?.teams?.away || 'Team'}</Text>
         <Share2 size={24} color={COLORS.white} />
       </View>
 
@@ -40,7 +40,7 @@ export const MatchDetailScreen = ({ route, navigation }) => {
           </View>
         ) : (
           <>
-            <View style={scoreRow}>
+            <View style={styles.scoreRow}>
                 <View style={styles.teamInfo}>
                     <Text style={styles.teamNameMain}>{match?.teams?.home || 'Team A'}</Text>
                     <Text style={styles.scoreMain}>{match?.score?.home || '0/0'}</Text>
@@ -89,8 +89,8 @@ export const MatchDetailScreen = ({ route, navigation }) => {
           {activeTab === 'info' && (
               <View style={styles.infoCard}>
                   <Text style={styles.infoTitle}>Match Info</Text>
-                  <View style={styles.infoRow}><Text style={styles.infoLabel}>Series</Text><Text style={styles.infoValue}>{match.series}</Text></View>
-                  <View style={styles.infoRow}><Text style={styles.infoLabel}>Status</Text><Text style={styles.infoValue}>{match.status}</Text></View>
+                  <View style={styles.infoRow}><Text style={styles.infoLabel}>Series</Text><Text style={styles.infoValue}>{match?.series || 'N/A'}</Text></View>
+                  <View style={styles.infoRow}><Text style={styles.infoLabel}>Status</Text><Text style={styles.infoValue}>{match?.status || 'N/A'}</Text></View>
                   <View style={styles.infoRow}><Text style={styles.infoLabel}>Venue</Text><Text style={styles.infoValue}>TBD</Text></View>
               </View>
           )}

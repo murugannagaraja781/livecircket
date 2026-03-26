@@ -12,6 +12,34 @@ export const fetchMatchDetail = createAsyncThunk('matches/fetchMatchDetail', asy
   return { matchId, data: response.data.payload };
 });
 
+const DUMMY_MATCHES = [
+  {
+    id: "dummy-1",
+    series: "International T20 League",
+    live: true,
+    teams: { home: "India", away: "Australia" },
+    score: { home: "185/4", away: "162/6", overs_home: "18.2", overs_away: "17.5" },
+    status: "India won by 23 runs",
+    batsmen: [
+      { name: "Virat Kohli", runs: 82, balls: 53, fours: 6, sixes: 3, sr: 154.7, out_desc: "not out" },
+      { name: "Rohit Sharma", runs: 45, balls: 30, fours: 4, sixes: 2, sr: 150.0, out_desc: "c Smith b Cummins" }
+    ],
+    bowlers: [
+      { name: "Pat Cummins", overs: 4, maidens: 0, runs: 35, wickets: 2, econ: 8.75 },
+      { name: "Mitchell Starc", overs: 4, maidens: 0, runs: 42, wickets: 1, econ: 10.5 }
+    ]
+  },
+  {
+    id: "dummy-2",
+    series: "World Cup 2024",
+    upcoming: true,
+    teams: { home: "England", away: "Pakistan" },
+    status: "Starts in 2 hours",
+    batsmen: [],
+    bowlers: []
+  }
+];
+
 const matchesSlice = createSlice({
   name: 'matches',
   initialState: {
@@ -52,7 +80,7 @@ const matchesSlice = createSlice({
       .addCase(fetchMatches.fulfilled, (state, action) => {
         state.loading = false;
         const matches = Array.isArray(action.payload) ? action.payload : [];
-        const formatted = matches.map(m => m.payload || m);
+        const formatted = matches.length > 0 ? matches.map(m => m.payload || m) : DUMMY_MATCHES;
         state.live = formatted.filter(m => m.live);
         state.upcoming = formatted.filter(m => m.upcoming);
         state.finished = formatted.filter(m => m.finished || (!m.live && !m.upcoming));
@@ -60,10 +88,22 @@ const matchesSlice = createSlice({
       .addCase(fetchMatches.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+        // Load dummy data on failure
+        state.live = DUMMY_MATCHES.filter(m => m.live);
+        state.upcoming = DUMMY_MATCHES.filter(m => m.upcoming);
+        state.finished = DUMMY_MATCHES.filter(m => m.finished || (!m.live && !m.upcoming));
       })
       .addCase(fetchMatchDetail.fulfilled, (state, action) => {
         const { matchId, data } = action.payload;
         state.details[matchId] = data;
+      })
+      .addCase(fetchMatchDetail.rejected, (state, action) => {
+        const matchId = action.meta.arg;
+        // Fallback to dummy detail if available
+        const dummy = DUMMY_MATCHES.find(m => m.id === matchId);
+        if (dummy) {
+          state.details[matchId] = dummy;
+        }
       });
   },
 });
